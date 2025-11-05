@@ -5,6 +5,7 @@ __pycache__/
 # Configs
 settings.json
 .cache-spotify-rotator
+.env
 
 # Build files
 build/

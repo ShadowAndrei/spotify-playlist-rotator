@@ -1,9 +1,6 @@
 """
-Spotify Playlist Rotator — Modern GUI (customtkinter)
-Version 4.0 (Polished UI & Features)
-
-Requirements:
-    pip install spotipy playsound==1.2.2 customtkinter
+Spotify Playlist Rotator
+Internal Version 5.0 (Secure - Uses .env file)
 """
 
 import os
@@ -11,6 +8,7 @@ import json
 import threading
 import time
 import webbrowser
+from dotenv import load_dotenv  # <-- ADDED
 from tkinter import (
     Listbox, Scrollbar, StringVar, BooleanVar,
     END, SINGLE, HORIZONTAL, messagebox
@@ -20,22 +18,21 @@ from playsound import playsound
 import spotipy
 from spotipy.oauth2 import SpotifyOAuth
 
-# ---- CONFIG - PASTE YOUR APP DETAILS HERE ----
-# 1. Get these from your Spotify Developer Dashboard
-# 2. Make SURE you add 'http://127.0.0.1:8888/callback' to your app's Redirect URIs
-CLIENT_ID = "4ab57e3e35d94a13b70c6e87cfa5c2ad"
-CLIENT_SECRET = "a07755e7050b409d9f1e131e31b922c7"
+load_dotenv()  # <-- ADDED: Loads secrets from .env file
+
+# ---- CONFIG - Loads from .env file ----
+CLIENT_ID = os.getenv("CLIENT_ID")          # <-- CHANGED
+CLIENT_SECRET = os.getenv("CLIENT_SECRET")    # <-- CHANGED
 REDIRECT_URI = "http://127.0.0.1:8888/callback"
 # -------------------------------------------
 
-# ---- Config / Colors / Defaults ----
 SETTINGS_FILE = "settings.json"
 DEFAULT_INTERVAL_SECONDS = 60 * 60 * 2  # 2 hours
 DEFAULT_SETTINGS = {
     "interval_seconds": DEFAULT_INTERVAL_SECONDS,
     "sound_enabled": True,
     "dark_mode": True,
-    "playlists": [],  # CHANGED: from "playlist_ids" to "playlists"
+    "playlists": [],
     "language": "en"
 }
 SCOPE = "user-modify-playback-state playlist-read-private user-read-playback-state"
@@ -55,7 +52,7 @@ LANGUAGES = {
     "en": {
         "window_title": "Spotify Playlist Rotator",
         "login_btn": "Login to Spotify & Load Playlists",
-        "playlist_label": "Rotation Playlists (Names):", # CHANGED
+        "playlist_label": "Rotation Playlists (Names):",
         "add_btn": "Add Manual",
         "remove_btn": "Remove Selected",
         "import_btn": "Import from Spotify",
@@ -70,9 +67,9 @@ LANGUAGES = {
         "status_stopped": "Stopped",
         "status_no_playlists": "No playlists set",
         "status_switching": "Switching to playlist {current}/{total}...",
-        "status_playing": "Playing: {name}", # CHANGED
+        "status_playing": "Playing: {name}",
         "status_playback_error": "Playback error: {e}",
-        "status_manual_play": "Manual: playing {name}", # CHANGED
+        "status_manual_play": "Manual: playing {name}",
         "status_manual_fail": "Manual play failed: {e}",
         "auth_success_title": "Authenticated",
         "auth_success_msg": "Spotify authentication completed.",
@@ -88,7 +85,7 @@ LANGUAGES = {
         "add_playlist_fail": "Could not find playlist with that ID/URL.",
         "add_playlist_exists": "That playlist is already in the list.",
         "remove_title": "Remove",
-        "remove_msg": "Remove playlist {name} from rotation?", # CHANGED
+        "remove_msg": "Remove playlist {name} from rotation?",
         "import_all_title": "Import all?",
         "import_all_msg": "Import all {count} playlists into rotation?",
         "quit_title": "Quit",
@@ -96,12 +93,12 @@ LANGUAGES = {
         "no_device_title": "No Active Device",
         "no_device_msg": "No active Spotify device found. Make sure Spotify is running on at least one device.",
         "client_id_error_title": "Configuration Error",
-        "client_id_error_msg": "CLIENT_ID or CLIENT_SECRET is not set. Please tell the developer."
+        "client_id_error_msg": "CLIENT_ID or CLIENT_SECRET not found in .env file. Please tell the developer." # CHANGED
     },
     "ro": {
         "window_title": "Rotator Playlist-uri Spotify",
         "login_btn": "Autentificare Spotify & Încarcă Playlist-uri",
-        "playlist_label": "Playlist-uri în Rotație (Nume):", # CHANGED
+        "playlist_label": "Playlist-uri în Rotație (Nume):",
         "add_btn": "Adaugă Manual",
         "remove_btn": "Șterge Selectat",
         "import_btn": "Importă de pe Spotify",
@@ -116,9 +113,9 @@ LANGUAGES = {
         "status_stopped": "Oprit",
         "status_no_playlists": "Niciun playlist setat",
         "status_switching": "Schimbare la playlist {current}/{total}...",
-        "status_playing": "Redare: {name}", # CHANGED
+        "status_playing": "Redare: {name}",
         "status_playback_error": "Eroare redare: {e}",
-        "status_manual_play": "Manual: redare {name}", # CHANGED
+        "status_manual_play": "Manual: redare {name}",
         "status_manual_fail": "Eroare redare manuală: {e}",
         "auth_success_title": "Autentificat",
         "auth_success_msg": "Autentificare Spotify finalizată.",
@@ -134,7 +131,7 @@ LANGUAGES = {
         "add_playlist_fail": "Nu am putut gasi playlist-ul cu acel ID/URL.",
         "add_playlist_exists": "Acest playlist este deja în listă.",
         "remove_title": "Ștergere",
-        "remove_msg": "Ștergem playlist-ul {name} din rotație?", # CHANGED
+        "remove_msg": "Ștergem playlist-ul {name} din rotație?",
         "import_all_title": "Import total?",
         "import_all_msg": "Importăm toate cele {count} playlist-uri în rotație?",
         "quit_title": "Confirmare ieșire",
@@ -142,7 +139,7 @@ LANGUAGES = {
         "no_device_title": "Niciun dispozitiv activ",
         "no_device_msg": "Niciun dispozitiv Spotify activ găsit. Asigură-te că Spotify rulează pe cel puțin un dispozitiv.",
         "client_id_error_title": "Eroare Configurare",
-        "client_id_error_msg": "CLIENT_ID or CLIENT_SECRET nu este setat."
+        "client_id_error_msg": "CLIENT_ID or CLIENT_SECRET nu a fost găsit în .env. Anunță dezvoltatorul." # CHANGED
     }
 }
 LANG = LANGUAGES["en"]
@@ -153,7 +150,6 @@ def load_settings():
         try:
             with open(SETTINGS_FILE, "r", encoding="utf-8") as f:
                 s = json.load(f)
-            # Handle migration from old 'playlist_ids'
             if "playlist_ids" in s:
                 print("Old 'playlist_ids' found, migrating... (Names will be fetched on login)")
                 s["playlists"] = [{"id": pid, "name": f"Loading... ({pid[:4]})"} for pid in s["playlist_ids"]]
@@ -199,13 +195,10 @@ def play_sound_async(sound_file="ding.mp3"):
     
 # ---- Spotify Auth / Helper Functions ----
 def ensure_spotify_client():
-    """
-    Ensures 'sp' is authenticated.
-    This now uses the hard-coded CLIENT_ID and CLIENT_SECRET.
-    """
     global sp, auth_manager
     
-    if CLIENT_ID == "PASTE_YOUR_CLIENT_ID_HERE" or CLIENT_SECRET == "PASTE_YOUR_CLIENT_SECRET_HERE":
+    # UPDATED Security Check
+    if not CLIENT_ID or not CLIENT_SECRET:
         messagebox.showerror(LANG["client_id_error_title"], LANG["client_id_error_msg"])
         return False
         
@@ -254,7 +247,7 @@ def fetch_user_playlists():
 def start_playback_on_playlist(playlist_id):
     global sp
     if not sp:
-        return # Not authenticated
+        return
     try:
         sp.start_playback(context_uri=f"spotify:playlist:{playlist_id}")
     except spotipy.SpotifyException as e:
@@ -268,6 +261,42 @@ def start_playback_on_playlist(playlist_id):
             pass
         raise
 
+def refresh_migrated_playlists():
+    """
+    Checks for any playlists with placeholder 'Loading...' names
+    and fetches their real names from Spotify. Runs in a thread.
+    """
+    global sp, settings
+    if not sp:
+        return 
+
+    time.sleep(1) 
+    
+    updated = False
+    new_playlist_list = []
+    
+    current_playlists = settings.get("playlists", [])
+    
+    for playlist in current_playlists:
+        if playlist["name"].startswith("Loading... ("):
+            try:
+                print(f"Refreshing name for playlist ID: {playlist['id']}")
+                p_details = sp.playlist(playlist['id'])
+                new_name = p_details["name"]
+                new_playlist_list.append({"id": playlist["id"], "name": new_name})
+                updated = True
+            except Exception as e:
+                print(f"Could not refresh name for {playlist['id']}: {e}")
+                new_playlist_list.append(playlist)
+        else:
+            new_playlist_list.append(playlist)
+
+    if updated:
+        print("Playlist names refreshed, saving settings.")
+        settings["playlists"] = new_playlist_list
+        save_settings(settings)
+        refresh_playlist_listbox()
+
 # ---- Rotation Loop ----
 def rotation_loop(gui_update_callback):
     global rotation_running, current_playlist_index, settings
@@ -276,7 +305,7 @@ def rotation_loop(gui_update_callback):
             if not rotation_running:
                 break
             
-            p_list = settings.get("playlists", []) # CHANGED
+            p_list = settings.get("playlists", [])
             if not p_list:
                 gui_update_callback(LANG["status_no_playlists"])
                 rotation_running = False
@@ -285,8 +314,8 @@ def rotation_loop(gui_update_callback):
             if current_playlist_index >= len(p_list):
                 current_playlist_index = 0
             
-            playlist = p_list[current_playlist_index] # CHANGED
-            pid = playlist["id"] # CHANGED
+            playlist = p_list[current_playlist_index]
+            pid = playlist["id"]
             
             gui_update_callback(LANG["status_switching"].format(
                 current=current_playlist_index+1, total=len(p_list)
@@ -296,7 +325,7 @@ def rotation_loop(gui_update_callback):
             except Exception as e:
                 gui_update_callback(LANG["status_playback_error"].format(e=e))
             else:
-                gui_update_callback(LANG["status_playing"].format(name=playlist["name"])) # CHANGED
+                gui_update_callback(LANG["status_playing"].format(name=playlist["name"]))
                 if settings.get("sound_enabled", True):
                     play_sound_async()
             
@@ -317,26 +346,27 @@ def rotation_loop(gui_update_callback):
 # ---- GUI Functions ----
 
 def refresh_playlist_listbox():
-    """UPDATED to show names"""
     playlist_list.delete(0, END)
     for p in settings.get("playlists", []):
-        playlist_list.insert(END, p["name"]) # CHANGED
+        playlist_list.insert(END, p["name"])
 
 def on_authenticate_and_load():
-    """UPDATED to hide login button"""
     global sp
     if ensure_spotify_client():
         messagebox.showinfo(LANG["auth_success_title"], LANG["auth_success_msg"])
         update_status(LANG["status_logged_in"])
-        auth_frame.pack_forget() # NEW: Hide login button
+        auth_frame.pack_forget()
         load_playlists_into_gui()
+        
+        # After loading, also refresh any old "Loading..." names
+        t = threading.Thread(target=refresh_migrated_playlists, daemon=True)
+        t.start()
     else:
         sp = None 
         update_status(LANG["status_idle"])
 
 def load_playlists_into_gui():
-    """UPDATED to save playlist objects"""
-    pls = fetch_user_playlists() # This already returns list of dicts
+    pls = fetch_user_playlists()
     if not pls:
         return
         
@@ -345,12 +375,11 @@ def load_playlists_into_gui():
         LANG["import_msg"].format(count=len(pls))
     )
     if import_choice:
-        settings["playlists"] = pls # CHANGED
+        settings["playlists"] = pls
         save_settings(settings)
         refresh_playlist_listbox()
 
 def add_playlist_manual():
-    """UPDATED to fetch playlist name from ID"""
     global sp
     if not sp:
         messagebox.showwarning("Not Logged In", "Please log in before adding playlists.")
@@ -362,7 +391,6 @@ def add_playlist_manual():
     if not val:
         return
     
-    # Extract ID from URL
     if "playlist/" in val:
         try:
             val = val.split("playlist/")[1].split("?")[0]
@@ -370,12 +398,10 @@ def add_playlist_manual():
             pass
     val = val.strip()
 
-    # Check if playlist already exists
     if val in [p["id"] for p in settings.get("playlists", [])]:
         messagebox.showinfo(LANG["add_playlist_title"], LANG["add_playlist_exists"])
         return
 
-    # Fetch playlist details to get the name
     try:
         p_details = sp.playlist(val)
         p_name = p_details["name"]
@@ -392,16 +418,15 @@ def add_playlist_manual():
 
 
 def remove_selected_playlist():
-    """UPDATED to use playlist name"""
     sel = playlist_list.curselection()
     if not sel:
         return
     idx = sel[0]
     
     try:
-        playlist = settings["playlists"][idx] # CHANGED
-        if messagebox.askyesno(LANG["remove_title"], LANG["remove_msg"].format(name=playlist["name"])): # CHANGED
-            settings["playlists"].pop(idx) # CHANGED
+        playlist = settings["playlists"][idx]
+        if messagebox.askyesno(LANG["remove_title"], LANG["remove_msg"].format(name=playlist["name"])):
+            settings["playlists"].pop(idx)
             save_settings(settings)
             refresh_playlist_listbox()
     except IndexError:
@@ -429,24 +454,23 @@ def toggle_rotation():
         update_status(LANG["status_stopped"])
 
 def manual_next():
-    """UPDATED to use playlist name"""
     global current_playlist_index, sp
     if not sp:
         messagebox.showwarning("Not Logged In", "Please log in before starting playback.")
         return
         
     with rotation_lock:
-        p_list = settings.get("playlists", []) # CHANGED
+        p_list = settings.get("playlists", [])
         if not p_list:
             update_status(LANG["status_no_playlists"])
             return
         
         current_playlist_index = current_playlist_index % len(p_list)
-        playlist = p_list[current_playlist_index] # CHANGED
-        pid = playlist["id"] # CHANGED
+        playlist = p_list[current_playlist_index]
+        pid = playlist["id"]
         try:
             start_playback_on_playlist(pid)
-            update_status(LANG["status_manual_play"].format(name=playlist["name"])) # CHANGED
+            update_status(LANG["status_manual_play"].format(name=playlist["name"]))
             if settings.get("sound_enabled", True):
                 play_sound_async()
             current_playlist_index = (current_playlist_index + 1) % len(p_list)
@@ -461,11 +485,10 @@ def on_sound_toggle():
     save_settings(settings)
 
 def on_interval_change(val_in_minutes):
-    """UPDATED to show slider value"""
     minutes = int(float(val_in_minutes))
     settings["interval_seconds"] = minutes * 60
     save_settings(settings)
-    interval_display_var.set(f"{minutes} min") # NEW: Update label
+    interval_display_var.set(f"{minutes} min")
 
 def import_playlists_button():
     global sp
@@ -481,12 +504,11 @@ def import_playlists_button():
         LANG["import_all_title"], 
         LANG["import_all_msg"].format(count=len(pls))
     ):
-        settings["playlists"] = pls # CHANGED
+        settings["playlists"] = pls
         save_settings(settings)
         refresh_playlist_listbox()
 
 def update_ui_colors(mode):
-    # (function code is identical)
     is_dark = (mode == "Dark")
     
     root_bg = SPOTIFY_BLACK if is_dark else LIGHT_MODE_BG
@@ -504,7 +526,6 @@ def update_ui_colors(mode):
     status_label.configure(fg_color=status_bg)
 
 def on_theme_toggle():
-    # (function code is identical)
     settings["dark_mode"] = theme_var.get()
     save_settings(settings)
     
@@ -513,7 +534,6 @@ def on_theme_toggle():
     update_ui_colors(new_mode)
 
 def update_language(lang_code):
-    # (function code is identical)
     global LANG
     LANG = LANGUAGES.get(lang_code, LANGUAGES["en"])
     
@@ -539,7 +559,6 @@ def update_language(lang_code):
         status_var.set(LANG["status_idle"] if not sp else LANG["status_logged_in"])
 
 def on_language_change(selected_lang_display):
-    # (function code is identical)
     lang_code = "en"
     if selected_lang_display == "Română":
         lang_code = "ro"
@@ -548,7 +567,7 @@ def on_language_change(selected_lang_display):
     save_settings(settings)
     update_language(lang_code)
 
-# ---- Build Main Window (v3.0 layout) ----
+# ---- Build Main Window (v4.0 layout) ----
 ctk.set_appearance_mode("Dark" if settings.get("dark_mode", True) else "Light")
 ctk.set_default_color_theme("blue")
 
@@ -571,7 +590,7 @@ auth_btn = ctk.CTkButton(
 )
 auth_btn.pack(fill="x", ipady=8)
 
-# ... (rest of the GUI build is identical to v3.0) ...
+# Playlist Listbox Frame
 pl_frame = ctk.CTkFrame(root, fg_color="transparent")
 pl_frame.pack(padx=12, pady=8, fill="both", expand=True)
 playlist_label = ctk.CTkLabel(pl_frame, text=LANG["playlist_label"])
@@ -650,7 +669,6 @@ slider_frame.pack(fill="x", padx=12, pady=(0, 6))
 interval_label = ctk.CTkLabel(slider_frame, text=LANG["interval_label"])
 interval_label.pack(side="left", padx=(12,4))
 
-# NEW: Label for slider value
 interval_display_var = StringVar()
 interval_value_label = ctk.CTkLabel(slider_frame, textvariable=interval_display_var, width=50, anchor="e")
 interval_value_label.pack(side="right", padx=(4, 12))
@@ -667,7 +685,7 @@ saved_min = max(1, int(settings.get("interval_seconds", DEFAULT_INTERVAL_SECONDS
 interval_scale.set(saved_min)
 interval_scale.pack(side="left", fill="x", expand=True, padx=(6, 12))
 
-on_interval_change(saved_min) # NEW: Set initial value for the label
+on_interval_change(saved_min)
 
 # Status bar
 status_var = StringVar(value=LANG["status_idle"])
@@ -680,7 +698,6 @@ refresh_playlist_listbox()
 update_ui_colors("Dark" if settings["dark_mode"] else "Light")
 
 def on_close():
-    # (function code is identical)
     global rotation_running
     if rotation_running and messagebox.askyesno(LANG["quit_title"], LANG["quit_msg"]):
         with rotation_lock:
@@ -692,7 +709,7 @@ root.protocol("WM_DELETE_WINDOW", on_close)
 
 # ---- Silent Login (UPDATED) ----
 # Attempt to log in silently on startup
-if CLIENT_ID != "PASTE_YOUR_CLIENT_ID_HERE" and CLIENT_SECRET != "PASTE_YOUR_CLIENT_SECRET_HERE":
+if CLIENT_ID and CLIENT_SECRET:  # UPDATED Security Check
     try:
         auth_manager = SpotifyOAuth(
             client_id=CLIENT_ID,
@@ -707,11 +724,18 @@ if CLIENT_ID != "PASTE_YOUR_CLIENT_ID_HERE" and CLIENT_SECRET != "PASTE_YOUR_CLI
             print("Cached token found, logging in silently...")
             sp = spotipy.Spotify(auth_manager=auth_manager)
             update_status(LANG["status_logged_in"])
-            auth_frame.pack_forget() # NEW: Hide login button on silent auth
+            auth_frame.pack_forget() 
+            
+            # Run the refresh function in a background thread
+            t = threading.Thread(target=refresh_migrated_playlists, daemon=True)
+            t.start()
+            
         else:
             print("No cached token. User must log in manually.")
     except Exception as e:
         print(f"Failed to load cached token: {e}")
+else:
+    print("CLIENT_ID or CLIENT_SECRET not found in .env file. User must log in manually.")
 
 # Run
 root.mainloop()
