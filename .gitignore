@@ -1,0 +1,12 @@
+# Python
+.venv/
+__pycache__/
+
+# Configs
+settings.json
+.cache-spotify-rotator
+
+# Build files
+build/
+dist/
+*.spec
