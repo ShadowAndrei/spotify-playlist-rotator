@@ -24,7 +24,7 @@ from spotipy.oauth2 import SpotifyOAuth
 # 1. Get these from your Spotify Developer Dashboard
 # 2. Make SURE you add 'http://127.0.0.1:8888/callback' to your app's Redirect URIs
 CLIENT_ID = "4ab57e3e35d94a13b70c6e87cfa5c2ad"
-CLIENT_SECRET = "bc3165e2dff449a5a4a395529bf5a778"
+CLIENT_SECRET = "a07755e7050b409d9f1e131e31b922c7"
 REDIRECT_URI = "http://127.0.0.1:8888/callback"
 # -------------------------------------------
 
