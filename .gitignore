@@ -1,13 +1,43 @@
-# Python
-.venv/
-__pycache__/
-
-# Configs
-settings.json
-.cache-spotify-rotator
+# Credentials & auth — never commit these
 .env
+.cache-spotify-rotator
+.cache-*
 
-# Build files
-build/
+# Build output
 dist/
-*.spec
+build/
+installer_output/
+*.spec.bak
+icon.ico
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+*.egg
+
+# Virtual environments
+.venv/
+venv/
+env/
+.env/
+
+# Logs & user data
+logs/
+*.log
+history.json
+settings.json
+
+# OS junk
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE
+.vscode/
+.idea/
+*.suo
+*.user
