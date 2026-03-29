@@ -1,0 +1,1378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Spotify Playlist Rotator</title>
+<style>
+:root{--green:#1DB954;--green-glow:rgba(29,185,84,0.35);--green-dim:rgba(29,185,84,0.10);--green-border:rgba(29,185,84,0.28);--bg:#07070f;
+/* Liquid glass layers */
+--lg-base:rgba(255,255,255,0.055);--lg-hover:rgba(255,255,255,0.085);
+--lg-border-top:rgba(255,255,255,0.45);--lg-border:rgba(255,255,255,0.10);
+--lg-specular:rgba(255,255,255,0.18);--lg-shadow:rgba(0,0,0,0.35);
+--glass:rgba(255,255,255,0.055);--glass-hover:rgba(255,255,255,0.085);--glass-border:rgba(255,255,255,0.10);--glass-strong:rgba(255,255,255,0.12);
+--white:#fff;--gray:#b3b3b3;--gray-dim:#535353;--radius:18px;--radius-sm:12px;--trans:all 0.28s cubic-bezier(0.4,0,0.2,1);--accent-glow:rgba(29,185,84,0.35);
+/* Themeable surface tokens */
+--t-bg:#07070f;--t-sidebar:rgba(0,0,0,0.28);--t-surface:rgba(255,255,255,0.055);
+--t-surface-grad:linear-gradient(145deg,rgba(255,255,255,0.072) 0%,rgba(255,255,255,0.028) 100%);
+--t-row-grad:linear-gradient(135deg,rgba(255,255,255,0.05) 0%,rgba(255,255,255,0.02) 100%);
+--t-row-hover:linear-gradient(135deg,rgba(255,255,255,0.085) 0%,rgba(255,255,255,0.04) 100%);
+--t-border:rgba(255,255,255,0.09);--t-border-hover:rgba(255,255,255,0.14);
+--t-specular:rgba(255,255,255,0.42);--t-blur:36px;--t-sat:180%;
+--t-shadow:0 8px 32px rgba(0,0,0,0.28);--t-text1:#fff;--t-text2:#b3b3b3;--t-text3:#535353;
+--t-orb1:#1DB954;--t-orb2:#7c3aed;--t-orb3:#0ea5e9;
+--t-orb1-op:.32;--t-orb2-op:.26;--t-orb3-op:.20;
+}
+
+/* ══════════════════════════════════════
+   THEME: LIQUID GLASS (default)
+   ══════════════════════════════════════ */
+/* Already defined above — liquid glass is the default */
+
+/* ══════════════════════════════════════
+   THEME: FROSTED GLASS
+   ══════════════════════════════════════ */
+[data-theme="frosted"]{
+  --t-bg:#0c0f1a;
+  --t-sidebar:rgba(20,24,40,0.55);
+  --t-surface-grad:linear-gradient(145deg,rgba(180,190,255,0.09) 0%,rgba(140,160,255,0.04) 100%);
+  --t-row-grad:linear-gradient(135deg,rgba(180,190,255,0.07) 0%,rgba(140,160,255,0.03) 100%);
+  --t-row-hover:linear-gradient(135deg,rgba(180,190,255,0.12) 0%,rgba(140,160,255,0.06) 100%);
+  --t-border:rgba(160,180,255,0.14);--t-border-hover:rgba(180,200,255,0.22);
+  --t-specular:rgba(200,220,255,0.55);--t-blur:48px;--t-sat:200%;
+  --t-shadow:0 8px 40px rgba(0,0,20,0.4);
+  --t-orb1:#4488ff;--t-orb2:#8844ee;--t-orb3:#44bbff;
+  --t-orb1-op:.30;--t-orb2-op:.22;--t-orb3-op:.18;
+}
+[data-theme="frosted"] .sidebar{background:rgba(14,18,38,0.52)!important;border-right-color:rgba(180,200,255,0.10)!important;}
+
+/* ══════════════════════════════════════
+   THEME: DARK (solid, minimal)
+   ══════════════════════════════════════ */
+[data-theme="dark"]{
+  --t-bg:#111114;
+  --t-sidebar:rgba(20,20,24,1);
+  --t-surface-grad:linear-gradient(145deg,#1c1c20 0%,#171719 100%);
+  --t-row-grad:linear-gradient(135deg,#1e1e22 0%,#1a1a1e 100%);
+  --t-row-hover:linear-gradient(135deg,#252529 0%,#202024 100%);
+  --t-border:rgba(255,255,255,0.06);--t-border-hover:rgba(255,255,255,0.12);
+  --t-specular:rgba(255,255,255,0.04);--t-blur:0px;--t-sat:100%;
+  --t-shadow:0 4px 16px rgba(0,0,0,0.5);
+  --t-orb1-op:.06;--t-orb2-op:.04;--t-orb3-op:.03;
+}
+[data-theme="dark"] .sidebar{background:#141416!important;border-right:1px solid #222!important;}
+[data-theme="dark"] .sidebar::after{display:none}
+[data-theme="dark"] .np-card,.sidebar [data-theme="dark"] .stats-card,[data-theme="dark"] .controls-card{backdrop-filter:none!important;-webkit-backdrop-filter:none!important;}
+[data-theme="dark"] .np-card::before,[data-theme="dark"] .stats-card::before,[data-theme="dark"] .controls-card::before{display:none}
+
+/* ══════════════════════════════════════
+   THEME: SPOTLIGHT
+   ══════════════════════════════════════ */
+[data-theme="spotlight"]{
+  --t-bg:#030305;
+  --t-sidebar:rgba(0,0,0,0.6);
+  --t-surface-grad:linear-gradient(145deg,rgba(29,185,84,0.07) 0%,rgba(0,0,0,0.4) 100%);
+  --t-row-grad:linear-gradient(135deg,rgba(29,185,84,0.05) 0%,rgba(0,0,0,0.3) 100%);
+  --t-row-hover:linear-gradient(135deg,rgba(29,185,84,0.10) 0%,rgba(0,0,0,0.2) 100%);
+  --t-border:rgba(29,185,84,0.12);--t-border-hover:rgba(29,185,84,0.25);
+  --t-specular:rgba(29,185,84,0.35);--t-blur:24px;--t-sat:150%;
+  --t-shadow:0 8px 40px rgba(0,0,0,0.7),0 0 60px rgba(29,185,84,0.06);
+  --green-glow:rgba(29,185,84,0.6);--accent-glow:rgba(29,185,84,0.6);
+  --t-orb1:#1DB954;--t-orb2:#0a4020;--t-orb3:#114428;
+  --t-orb1-op:.45;--t-orb2-op:.20;--t-orb3-op:.15;
+}
+[data-theme="spotlight"] .sidebar{background:rgba(0,0,0,0.7)!important;}
+
+/* ══════════════════════════════════════
+   THEME: FRUTIGER AERO
+   ══════════════════════════════════════ */
+[data-theme="aero"]{
+  --t-bg:#0a1628;
+  --t-sidebar:rgba(10,30,60,0.55);
+  --t-surface-grad:linear-gradient(145deg,rgba(100,180,255,0.12) 0%,rgba(50,120,220,0.06) 100%);
+  --t-row-grad:linear-gradient(135deg,rgba(100,200,255,0.09) 0%,rgba(50,140,220,0.04) 100%);
+  --t-row-hover:linear-gradient(135deg,rgba(100,200,255,0.16) 0%,rgba(50,140,220,0.08) 100%);
+  --t-border:rgba(100,180,255,0.18);--t-border-hover:rgba(120,200,255,0.30);
+  --t-specular:rgba(180,230,255,0.65);--t-blur:32px;--t-sat:160%;
+  --t-shadow:0 6px 30px rgba(0,30,80,0.5),inset 0 1px 0 rgba(200,230,255,0.25);
+  --green:#00d4ff;--green-glow:rgba(0,212,255,0.4);--green-dim:rgba(0,212,255,0.10);
+  --green-border:rgba(0,212,255,0.28);--accent-glow:rgba(0,212,255,0.4);
+  --t-orb1:#0088ff;--t-orb2:#00aaff;--t-orb3:#44ddff;
+  --t-orb1-op:.35;--t-orb2-op:.28;--t-orb3-op:.22;
+}
+[data-theme="aero"] .sidebar{background:rgba(8,22,50,0.60)!important;border-right-color:rgba(100,180,255,0.12)!important;}
+/* Aero glass button glow */
+[data-theme="aero"] .btn-primary{background:linear-gradient(180deg,#00c8ff 0%,#0070ff 100%)!important;box-shadow:0 2px 12px rgba(0,150,255,0.5),inset 0 1px 0 rgba(255,255,255,0.4)!important;}
+[data-theme="aero"] .btn-primary:hover{background:linear-gradient(180deg,#20d8ff 0%,#1080ff 100%)!important;}
+
+/* ══════════════════════════════════════
+   THEME: MIDNIGHT PURPLE
+   ══════════════════════════════════════ */
+[data-theme="midnight"]{
+  --t-bg:#08050f;
+  --t-sidebar:rgba(15,8,28,0.55);
+  --t-surface-grad:linear-gradient(145deg,rgba(140,80,255,0.08) 0%,rgba(80,40,160,0.04) 100%);
+  --t-row-grad:linear-gradient(135deg,rgba(140,80,255,0.06) 0%,rgba(80,40,160,0.03) 100%);
+  --t-row-hover:linear-gradient(135deg,rgba(140,80,255,0.12) 0%,rgba(80,40,160,0.06) 100%);
+  --t-border:rgba(140,80,255,0.14);--t-border-hover:rgba(160,100,255,0.25);
+  --t-specular:rgba(180,120,255,0.45);--t-blur:36px;--t-sat:170%;
+  --t-shadow:0 8px 40px rgba(20,0,50,0.5);
+  --green:#a855f7;--green-glow:rgba(168,85,247,0.4);--green-dim:rgba(168,85,247,0.10);
+  --green-border:rgba(168,85,247,0.28);--accent-glow:rgba(168,85,247,0.4);
+  --t-orb1:#7c3aed;--t-orb2:#a855f7;--t-orb3:#4f46e5;
+  --t-orb1-op:.35;--t-orb2-op:.25;--t-orb3-op:.20;
+}
+
+/* ══════════════════════════════════════
+   THEME: SUNSET
+   ══════════════════════════════════════ */
+[data-theme="sunset"]{
+  --t-bg:#0f0608;
+  --t-sidebar:rgba(30,8,14,0.55);
+  --t-surface-grad:linear-gradient(145deg,rgba(255,80,100,0.08) 0%,rgba(200,40,60,0.04) 100%);
+  --t-row-grad:linear-gradient(135deg,rgba(255,80,100,0.06) 0%,rgba(200,40,60,0.03) 100%);
+  --t-row-hover:linear-gradient(135deg,rgba(255,80,100,0.12) 0%,rgba(200,40,60,0.06) 100%);
+  --t-border:rgba(255,80,100,0.14);--t-border-hover:rgba(255,100,120,0.25);
+  --t-specular:rgba(255,160,120,0.50);--t-blur:36px;--t-sat:160%;
+  --t-shadow:0 8px 40px rgba(50,0,10,0.5);
+  --green:#ff6b6b;--green-glow:rgba(255,107,107,0.4);--green-dim:rgba(255,107,107,0.10);
+  --green-border:rgba(255,107,107,0.28);--accent-glow:rgba(255,107,107,0.4);
+  --t-orb1:#ff4060;--t-orb2:#ff8c00;--t-orb3:#ff2244;
+  --t-orb1-op:.32;--t-orb2-op:.24;--t-orb3-op:.18;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;height:100%;background:var(--t-bg);color:var(--t-text1,#fff);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;overflow:hidden;user-select:none}
+.aurora-wrap{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
+.orb{position:absolute;border-radius:50%;filter:blur(90px);animation:drift 14s ease-in-out infinite alternate;transition:background 2.5s ease,opacity 1.5s ease}
+.orb-1{width:680px;height:680px;background:radial-gradient(circle,var(--t-orb1,#1DB954) 0%,transparent 70%);top:-180px;left:-140px;opacity:var(--t-orb1-op,.32)}
+.orb-2{width:580px;height:580px;background:radial-gradient(circle,var(--t-orb2,#7c3aed) 0%,transparent 70%);bottom:-160px;right:20px;animation-duration:18s;animation-delay:-6s;opacity:var(--t-orb2-op,.26)}
+.orb-3{width:520px;height:520px;background:radial-gradient(circle,var(--t-orb3,#0ea5e9) 0%,transparent 70%);top:35%;left:45%;animation-duration:22s;animation-delay:-11s;opacity:var(--t-orb3-op,.20)}
+@keyframes drift{0%{transform:translate(0,0) scale(1)}33%{transform:translate(40px,-30px) scale(1.08)}66%{transform:translate(-20px,50px) scale(.95)}100%{transform:translate(60px,20px) scale(1.05)}}
+.app{position:relative;z-index:1;display:flex;width:100vw;height:100vh}
+.sidebar{width:270px;min-width:270px;height:100vh;display:flex;flex-direction:column;
+background:var(--t-sidebar,rgba(0,0,0,0.28));
+border-right:1px solid rgba(255,255,255,0.07);
+backdrop-filter:blur(40px) saturate(180%);-webkit-backdrop-filter:blur(40px) saturate(180%);
+overflow:hidden;position:relative;}
+/* Liquid glass specular edge on sidebar right border */
+.sidebar::after{content:'';position:absolute;top:0;right:0;width:1px;height:100%;
+background:linear-gradient(to bottom,rgba(255,255,255,0.25) 0%,rgba(255,255,255,0.08) 40%,rgba(255,255,255,0.02) 100%);
+pointer-events:none;}
+.logo{display:flex;align-items:center;gap:10px;padding:22px 20px 16px;border-bottom:1px solid var(--glass-border)}
+.logo-icon{font-size:22px}.logo-text{font-size:18px;font-weight:700;letter-spacing:-.3px}
+.nav{padding:10px 12px;display:flex;flex-direction:column;gap:2px}
+.nav-btn{display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:var(--radius-sm);cursor:pointer;transition:var(--trans);font-size:13.5px;font-weight:500;color:var(--gray);border:1px solid transparent;position:relative;}
+.nav-btn:hover{background:var(--lg-hover);color:var(--white);border-color:rgba(255,255,255,0.08);box-shadow:inset 0 1px 0 rgba(255,255,255,0.12),0 1px 3px rgba(0,0,0,0.2);}
+.nav-btn.active{
+background:linear-gradient(135deg,rgba(29,185,84,0.18) 0%,rgba(29,185,84,0.08) 100%);
+border-color:rgba(29,185,84,0.3);color:var(--green);
+box-shadow:inset 0 1px 0 rgba(255,255,255,0.15),inset 0 -1px 0 rgba(0,0,0,0.1),0 1px 4px rgba(0,0,0,0.2),0 0 12px rgba(29,185,84,0.08);}
+.nav-btn .icon{font-size:16px;width:20px;text-align:center}
+.stats-card{margin:8px 12px 4px;
+background:linear-gradient(145deg,rgba(255,255,255,0.07) 0%,rgba(255,255,255,0.03) 100%);
+border:1px solid rgba(255,255,255,0.08);border-radius:var(--radius);padding:14px;
+backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+box-shadow:inset 0 1px 0 rgba(255,255,255,0.12),inset 0 -1px 0 rgba(0,0,0,0.08),0 4px 16px rgba(0,0,0,0.2);
+position:relative;overflow:hidden;}
+/* Specular highlight on top edge */
+.stats-card::before{content:'';position:absolute;top:0;left:10%;width:80%;height:1px;background:linear-gradient(to right,transparent,rgba(255,255,255,0.35),transparent);pointer-events:none;}
+.stats-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+.stat-item{text-align:center}
+.stat-val{font-size:22px;font-weight:800;color:var(--green);text-shadow:0 0 12px var(--green-glow);letter-spacing:-.5px}
+.stat-label{font-size:10px;color:var(--gray-dim);text-transform:uppercase;letter-spacing:.5px;margin-top:2px}
+.stats-divider{height:1px;background:var(--glass-border);margin-bottom:10px}
+.now-rotating-label{font-size:9px;text-transform:uppercase;letter-spacing:1px;color:var(--gray-dim);text-align:center}
+.now-rotating-name{font-size:12px;font-weight:600;text-align:center;margin-top:4px;color:var(--white);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.controls-card{margin:4px 12px;
+background:linear-gradient(145deg,rgba(255,255,255,0.07) 0%,rgba(255,255,255,0.03) 100%);
+border:1px solid rgba(255,255,255,0.08);border-radius:var(--radius);
+display:flex;align-items:center;justify-content:space-around;padding:8px 4px;
+box-shadow:inset 0 1px 0 rgba(255,255,255,0.12),0 4px 16px rgba(0,0,0,0.2);
+position:relative;overflow:hidden;}
+.controls-card::before{content:'';position:absolute;top:0;left:15%;width:70%;height:1px;background:linear-gradient(to right,transparent,rgba(255,255,255,0.3),transparent);pointer-events:none;}
+.ctrl-btn{width:38px;height:38px;display:flex;align-items:center;justify-content:center;border-radius:8px;cursor:pointer;font-size:16px;color:var(--gray);transition:var(--trans);border:none;background:transparent}
+.ctrl-btn:hover{background:var(--glass-hover);color:var(--white)}
+.ctrl-btn.active{color:var(--green);text-shadow:0 0 8px var(--green-glow)}
+.ctrl-btn.play-pause{background:var(--glass-strong);color:var(--white);font-size:18px}
+.ctrl-btn.play-pause:hover{background:var(--green);color:#000}
+.progress-wrap{padding:8px 16px 4px}
+.progress-label{font-size:10px;color:var(--gray-dim);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px}
+.progress-track{height:3px;border-radius:99px;background:var(--glass-strong);overflow:hidden}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--green),#1ed760);border-radius:99px;transition:width .5s ease;box-shadow:0 0 6px var(--green-glow);width:0%}
+.status-text{padding:4px 16px;font-size:11px;color:var(--gray-dim);min-height:20px}
+.sidebar-spacer{flex:1}
+.sidebar-btns{padding:8px 12px 16px;display:flex;flex-direction:column;gap:6px}
+.btn{border:none;border-radius:var(--radius-sm);cursor:pointer;font-size:13px;font-weight:600;padding:10px 16px;transition:var(--trans);display:flex;align-items:center;justify-content:center;gap:6px}
+.btn-primary{background:var(--green);color:#000}
+.btn-primary:hover{background:#1ed760;box-shadow:0 0 16px var(--green-glow)}
+.btn-ghost{background:var(--glass);color:var(--gray);border:1px solid var(--glass-border)}
+.btn-ghost:hover{background:var(--glass-hover);color:var(--white)}
+.btn-row{display:flex;gap:6px}.btn-row .btn{flex:1}
+.btn-icon{width:40px;padding:10px 0;flex-shrink:0}
+.main{flex:1;height:100vh;display:flex;flex-direction:column;overflow:hidden;padding:14px 16px 14px 16px;gap:10px}
+.np-card{
+background:var(--t-surface-grad,linear-gradient(145deg,rgba(255,255,255,0.072) 0%,rgba(255,255,255,0.028) 100%));
+border:1px solid var(--t-border,rgba(255,255,255,0.10));border-radius:var(--radius);
+backdrop-filter:blur(var(--t-blur,36px)) saturate(var(--t-sat,200%));-webkit-backdrop-filter:blur(var(--t-blur,36px)) saturate(var(--t-sat,200%));
+padding:16px;display:flex;align-items:center;gap:16px;flex-shrink:0;transition:var(--trans);
+position:relative;overflow:hidden;cursor:pointer;
+box-shadow:inset 0 1.5px 0 rgba(255,255,255,0.20),inset 0 -1px 0 rgba(0,0,0,0.10),var(--t-shadow,0 8px 32px rgba(0,0,0,0.28)),0 2px 6px rgba(0,0,0,0.12);}
+/* Top specular line */
+.np-card::before{content:'';position:absolute;top:0;left:8%;width:84%;height:1px;background:linear-gradient(to right,transparent,var(--t-specular,rgba(255,255,255,0.45)),transparent);pointer-events:none;z-index:1;}
+/* Subtle inner glow */
+.np-card::after{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,0.05) 0%,transparent 55%);pointer-events:none;}
+.np-card:hover{border-color:var(--t-border-hover,rgba(255,255,255,0.15));box-shadow:inset 0 1.5px 0 rgba(255,255,255,0.25),0 10px 40px rgba(0,0,0,0.32);}
+.np-lyrics-hint{position:absolute;bottom:8px;right:14px;font-size:10px;color:var(--gray-dim);text-transform:uppercase;letter-spacing:.6px;opacity:0;transition:opacity .2s ease}
+.np-card:hover .np-lyrics-hint{opacity:1}
+.np-album{width:100px;height:100px;border-radius:12px;background:var(--glass-strong);flex-shrink:0;box-shadow:0 4px 24px rgba(0,0,0,.5);transition:var(--trans);display:flex;align-items:center;justify-content:center;font-size:32px;color:var(--gray-dim);overflow:hidden}
+.np-album img{width:100%;height:100%;object-fit:cover;border-radius:12px;display:block}
+.np-album.playing{box-shadow:0 4px 24px rgba(0,0,0,.5),0 0 32px var(--accent-glow)}
+.np-artist{font-size:13px;color:var(--gray);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.np-album-name{font-size:11px;color:var(--gray-dim);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.np-progress-wrap{margin-top:10px}
+.np-progress-track{height:3px;border-radius:99px;background:rgba(255,255,255,0.08);overflow:hidden}
+.np-progress-fill{height:100%;background:linear-gradient(90deg,var(--green),#1ed760);border-radius:99px;transition:width .9s linear;box-shadow:0 0 6px var(--green-glow)}
+.np-times{display:flex;justify-content:space-between;font-size:10px;color:var(--gray-dim);margin-top:5px}
+.np-device{min-width:180px;display:flex;flex-direction:column;gap:6px}
+.device-badge{font-size:10px;text-transform:uppercase;letter-spacing:.8px;padding:4px 10px;border-radius:99px;text-align:center;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.08);color:var(--gray-dim)}
+.device-badge.active{background:var(--green-dim);border-color:var(--green-border);color:var(--green)}
+.device-select{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.09);border-radius:var(--radius-sm);color:var(--white);font-size:11px;padding:6px 10px;outline:none;cursor:pointer;width:100%}
+.device-select option{background:#1a1a2e}
+.volume-slider{width:100%;accent-color:var(--green);cursor:pointer;height:3px}
+.btn-transfer{background:var(--green);border:none;border-radius:var(--radius-sm);color:#000;font-size:11px;font-weight:600;padding:6px;cursor:pointer;transition:var(--trans);text-align:center}
+.btn-transfer:hover{background:#1ed760;box-shadow:0 0 12px var(--green-glow)}
+.tab-content{flex:1;min-height:0;position:relative;overflow:hidden}
+.tab-panel{position:absolute;inset:0;display:none;flex-direction:column;gap:6px;height:100%;overflow:hidden}
+.tab-panel.active{display:flex}
+.toolbar{
+background:linear-gradient(145deg,rgba(255,255,255,0.065) 0%,rgba(255,255,255,0.025) 100%);
+border:1px solid rgba(255,255,255,0.09);border-radius:var(--radius);
+padding:10px 14px;display:flex;align-items:center;gap:8px;flex-shrink:0;
+backdrop-filter:blur(28px);-webkit-backdrop-filter:blur(28px);
+box-shadow:inset 0 1px 0 rgba(255,255,255,0.14),0 4px 12px rgba(0,0,0,0.18);
+position:relative;overflow:hidden;}
+.toolbar::before{content:'';position:absolute;top:0;left:10%;width:80%;height:1px;background:linear-gradient(to right,transparent,rgba(255,255,255,0.30),transparent);pointer-events:none;}
+.toolbar-label{font-size:12px;color:var(--gray);margin-right:4px}
+.scroll-list{flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:4px;padding:0 2px 4px 2px}
+.scroll-list::-webkit-scrollbar{width:3px}
+.scroll-list::-webkit-scrollbar-track{background:transparent}
+.scroll-list::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.12);border-radius:99px}
+.scroll-list::-webkit-scrollbar-thumb:hover{background:var(--green)}
+/* Search bar */
+.search-wrap{position:relative;display:flex;align-items:center;flex-shrink:0}
+.search-icon{position:absolute;left:12px;font-size:15px;color:var(--gray-dim);pointer-events:none;z-index:1}
+.search-input{width:100%;padding:9px 36px 9px 34px;
+background:var(--t-row-grad,linear-gradient(135deg,rgba(255,255,255,0.05) 0%,rgba(255,255,255,0.02) 100%));
+border:1px solid var(--t-border,rgba(255,255,255,0.08));border-radius:var(--radius-sm);
+color:var(--white);font-size:13px;outline:none;transition:var(--trans);backdrop-filter:blur(12px);}
+.search-input::placeholder{color:var(--gray-dim)}
+.search-input:focus{border-color:var(--green);box-shadow:0 0 0 2px rgba(29,185,84,0.12)}
+.search-clear{position:absolute;right:10px;background:none;border:none;color:var(--gray-dim);cursor:pointer;font-size:13px;padding:4px;transition:var(--trans);line-height:1}
+.search-clear:hover{color:var(--white)}
+/* Recently played strip */
+.recent-pl-label{font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:var(--gray-dim);padding:4px 2px 3px;flex-shrink:0}
+.recent-pl-list{display:flex;gap:6px;overflow-x:auto;padding:0 2px 4px;flex-shrink:0}
+.recent-pl-list::-webkit-scrollbar{height:2px}
+.recent-pl-list::-webkit-scrollbar-thumb{background:var(--green);border-radius:99px}
+.recent-pl-chip{display:flex;align-items:center;gap:6px;padding:5px 11px;
+border-radius:99px;cursor:pointer;white-space:nowrap;font-size:12px;font-weight:600;
+background:var(--t-row-grad,rgba(255,255,255,0.05));border:1px solid var(--t-border,rgba(255,255,255,0.08));
+transition:var(--trans);flex-shrink:0;}
+.recent-pl-chip:hover{background:var(--green-dim);border-color:var(--green-border);color:var(--green)}
+.recent-pl-chip img{width:18px;height:18px;border-radius:4px;object-fit:cover}
+/* Liquid glass playlist rows */
+.pl-row{display:flex;align-items:center;gap:12px;padding:10px 14px;min-height:72px;border-radius:10px;
+background:var(--t-row-grad,linear-gradient(135deg,rgba(255,255,255,0.05) 0%,rgba(255,255,255,0.02) 100%));
+border:1px solid var(--t-border,rgba(255,255,255,0.06));cursor:pointer;transition:var(--trans);position:relative;overflow:hidden;}
+.pl-row::before{content:'';position:absolute;top:0;left:5%;width:90%;height:1px;background:linear-gradient(to right,transparent,var(--t-specular,rgba(255,255,255,0.18)),transparent);pointer-events:none;opacity:0;transition:opacity .25s;}
+.pl-row:hover{background:var(--t-row-hover,linear-gradient(135deg,rgba(255,255,255,0.085) 0%,rgba(255,255,255,0.04) 100%));border-color:var(--t-border-hover,rgba(255,255,255,0.11));box-shadow:inset 0 1px 0 rgba(255,255,255,0.10),0 2px 8px rgba(0,0,0,0.15);}
+.pl-row:hover::before{opacity:1;}
+.pl-row.active{
+background:linear-gradient(135deg,rgba(29,185,84,0.14) 0%,rgba(29,185,84,0.05) 100%);
+border-color:rgba(29,185,84,0.28);
+box-shadow:inset 0 1px 0 rgba(255,255,255,0.15),0 0 16px rgba(29,185,84,0.06);}
+.pl-row.active .pl-name{color:var(--green)}
+.pl-accent{width:3px;height:100%;position:absolute;left:0;top:0;border-radius:99px 0 0 99px;background:transparent;transition:var(--trans)}
+.pl-row.active .pl-accent{background:linear-gradient(to bottom,#1ed760,#1DB954)}
+.pl-cover{width:54px;height:54px;border-radius:10px;background:rgba(255,255,255,0.06);flex-shrink:0;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:20px;color:var(--gray-dim);box-shadow:0 2px 8px rgba(0,0,0,0.3);}
+.pl-cover img{width:100%;height:100%;object-fit:cover;border-radius:10px}
+.pl-text{flex:1;min-width:0}
+.pl-name{font-size:13.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pl-meta{font-size:11px;color:var(--gray-dim);margin-top:3px}
+.pl-play{color:var(--gray-dim);font-size:15px;opacity:0;transition:var(--trans)}
+.pl-row:hover .pl-play{opacity:1;color:var(--green)}
+.pl-drag-handle{color:var(--gray-dim);font-size:15px;cursor:grab;padding:0 4px;opacity:0;transition:var(--trans)}
+.pl-row:hover .pl-drag-handle{opacity:1}
+.pl-row.drag-over{border-color:var(--green);background:var(--green-dim)}
+/* Liquid glass queue rows */
+.q-row{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:var(--radius-sm);
+background:var(--t-row-grad,linear-gradient(135deg,rgba(255,255,255,0.045) 0%,rgba(255,255,255,0.018) 100%));
+border:1px solid var(--t-border,rgba(255,255,255,0.055));cursor:pointer;transition:var(--trans);}
+.q-row:hover{background:var(--t-row-hover,linear-gradient(135deg,rgba(255,255,255,0.08) 0%,rgba(255,255,255,0.035) 100%));border-color:var(--t-border-hover,rgba(255,255,255,0.10));box-shadow:inset 0 1px 0 rgba(255,255,255,0.10);}
+.q-cover{width:38px;height:38px;border-radius:6px;background:rgba(255,255,255,0.06);flex-shrink:0;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--gray-dim)}
+.q-cover img{width:100%;height:100%;object-fit:cover}
+.q-text{flex:1;min-width:0}
+.q-name{font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.q-artist{font-size:11px;color:var(--gray-dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.q-dur{font-size:11px;color:var(--gray-dim);flex-shrink:0}
+.q-row:hover .q-name{color:var(--green)}
+.hist-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;flex-shrink:0}
+.hist-stat{
+background:linear-gradient(145deg,rgba(255,255,255,0.065) 0%,rgba(255,255,255,0.025) 100%);
+border:1px solid rgba(255,255,255,0.08);border-radius:var(--radius-sm);padding:14px;text-align:center;
+backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+box-shadow:inset 0 1px 0 rgba(255,255,255,0.12),0 4px 12px rgba(0,0,0,0.15);
+position:relative;overflow:hidden;}
+.hist-stat::before{content:'';position:absolute;top:0;left:15%;width:70%;height:1px;background:linear-gradient(to right,transparent,rgba(255,255,255,0.25),transparent);pointer-events:none;}
+.hist-stat-val{font-size:24px;font-weight:800;color:var(--green);text-shadow:0 0 12px var(--green-glow)}
+.hist-stat-label{font-size:10px;color:var(--gray-dim);text-transform:uppercase;letter-spacing:.5px;margin-top:3px}
+.hist-tabs{display:flex;gap:6px;flex-shrink:0}
+.hist-tab{padding:7px 16px;border-radius:var(--radius-sm);font-size:12px;font-weight:600;cursor:pointer;transition:var(--trans);
+background:linear-gradient(135deg,rgba(255,255,255,0.05) 0%,rgba(255,255,255,0.02) 100%);
+border:1px solid rgba(255,255,255,0.07);color:var(--gray);}
+.hist-tab.active{background:linear-gradient(135deg,rgba(29,185,84,0.14) 0%,rgba(29,185,84,0.05) 100%);border-color:rgba(29,185,84,0.28);color:var(--green);}
+.hist-tab:hover:not(.active){background:linear-gradient(135deg,rgba(255,255,255,0.08) 0%,rgba(255,255,255,0.035) 100%);color:var(--white);}
+.hist-row{padding:10px 14px;border-radius:var(--radius-sm);
+background:linear-gradient(135deg,rgba(255,255,255,0.045) 0%,rgba(255,255,255,0.018) 100%);
+border:1px solid rgba(255,255,255,0.055);transition:var(--trans);}
+.hist-row:hover{background:linear-gradient(135deg,rgba(255,255,255,0.08) 0%,rgba(255,255,255,0.035) 100%);border-color:rgba(255,255,255,0.10);}
+.hist-row-name{font-size:13px;font-weight:600}
+.hist-row-meta{font-size:11px;color:var(--gray-dim);margin-top:2px}
+.hist-top-row{display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:var(--radius-sm);
+background:linear-gradient(135deg,rgba(255,255,255,0.045) 0%,rgba(255,255,255,0.018) 100%);
+border:1px solid rgba(255,255,255,0.055);}
+.hist-rank{font-size:14px;font-weight:800;width:28px;text-align:center}
+.hist-rank.gold{color:#FFD700;text-shadow:0 0 8px rgba(255,215,0,.5)}
+.hist-rank.silver{color:#C0C0C0}
+.hist-rank.bronze{color:#CD7F32}
+.hist-rank.other{color:var(--gray-dim)}
+.hist-top-name{flex:1;font-size:13px;font-weight:600}
+.hist-top-count{font-size:13px;font-weight:700;color:var(--green)}
+/* LYRICS OVERLAY */
+.lyrics-overlay{display:none;position:fixed;inset:0;z-index:90;overflow:hidden}
+.lyrics-overlay.open{display:flex}
+.lyrics-bg{position:absolute;inset:0;background-size:cover;background-position:center;filter:blur(60px) brightness(.3) saturate(1.4);transform:scale(1.1);transition:background-image 1.5s ease}
+.lyrics-bg-dim{position:absolute;inset:0;background:rgba(0,0,0,.50)}
+.lyrics-content{position:relative;z-index:1;display:flex;width:100%;height:100%;padding:56px 28px 24px;gap:32px}
+.lyrics-left{width:220px;flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:10px;padding-top:8px}
+.lyrics-art{width:180px;height:180px;border-radius:14px;overflow:hidden;box-shadow:0 8px 40px rgba(0,0,0,.6);flex-shrink:0}
+.lyrics-art img{width:100%;height:100%;object-fit:cover;display:block}
+.lyrics-track-name{font-size:15px;font-weight:800;text-align:center;line-height:1.3}
+.lyrics-track-artist{font-size:12px;color:var(--gray);text-align:center}
+.lyrics-prog-bar{width:100%;height:3px;border-radius:99px;background:rgba(255,255,255,.15);overflow:hidden;margin-top:2px}
+.lyrics-prog-fill{height:100%;background:var(--green);border-radius:99px;transition:width .9s linear}
+.lyrics-time{font-size:10px;color:var(--gray-dim);width:100%;display:flex;justify-content:space-between}
+.lyrics-right{flex:1;min-width:0;overflow-y:auto;display:flex;flex-direction:column;padding:0;scroll-behavior:smooth}
+.lyrics-right::-webkit-scrollbar{width:0}
+.lyric-line{font-size:24px;font-weight:700;color:rgba(255,255,255,.2);padding:8px 0;cursor:pointer;transition:color .35s ease,transform .35s ease,text-shadow .35s ease;line-height:1.35;transform-origin:left center}
+.lyric-line:hover{color:rgba(255,255,255,.45)}
+.lyric-line.active{color:#fff;transform:scale(1.04);text-shadow:0 0 30px var(--accent-glow)}
+.lyric-line.past{color:rgba(255,255,255,.32)}
+.lyric-line.empty-line{height:16px}
+.lyrics-none{color:var(--gray-dim);padding:40px 0;font-size:14px;line-height:1.8}
+.lyrics-topbar{position:absolute;top:0;left:0;right:0;padding:12px 20px;display:flex;align-items:center;justify-content:space-between;z-index:2;background:linear-gradient(to bottom,rgba(0,0,0,.6),transparent)}
+.lyrics-label{font-size:12px;color:var(--gray);text-transform:uppercase;letter-spacing:1px}
+.lyrics-close{width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,0.10);border:1px solid rgba(255,255,255,0.12);cursor:pointer;color:var(--gray);font-size:16px;display:flex;align-items:center;justify-content:center;transition:var(--trans);box-shadow:inset 0 1px 0 rgba(255,255,255,0.15);}
+.lyrics-close:hover{background:rgba(255,255,255,.2);color:var(--white)}
+/* LIQUID GLASS MODALS */
+.modal-overlay{display:none;position:fixed;inset:0;z-index:100;background:rgba(0,0,0,.65);backdrop-filter:blur(12px);align-items:center;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal{
+background:linear-gradient(145deg,rgba(255,255,255,0.09) 0%,rgba(255,255,255,0.04) 100%);
+border:1px solid rgba(255,255,255,0.12);border-radius:22px;padding:28px;width:440px;
+backdrop-filter:blur(40px) saturate(180%);-webkit-backdrop-filter:blur(40px) saturate(180%);
+box-shadow:inset 0 1.5px 0 rgba(255,255,255,0.22),0 24px 80px rgba(0,0,0,.7);
+animation:modal-in .2s ease;position:relative;overflow:hidden;}
+.modal::before{content:'';position:absolute;top:0;left:8%;width:84%;height:1px;background:linear-gradient(to right,transparent,rgba(255,255,255,0.40),transparent);pointer-events:none;}
+@keyframes modal-in{from{opacity:0;transform:scale(.95) translateY(8px)}to{opacity:1;transform:scale(1)}}
+.modal-title{font-size:20px;font-weight:700;margin-bottom:20px}
+.setting-row{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;
+background:linear-gradient(135deg,rgba(255,255,255,0.05) 0%,rgba(255,255,255,0.02) 100%);
+border:1px solid rgba(255,255,255,0.07);border-radius:var(--radius-sm);margin-bottom:8px;
+box-shadow:inset 0 1px 0 rgba(255,255,255,0.07);}
+.setting-label{font-size:13px;font-weight:500}
+.toggle{width:44px;height:24px;background:rgba(255,255,255,0.10);border:1px solid rgba(255,255,255,0.08);border-radius:99px;cursor:pointer;position:relative;transition:var(--trans);flex-shrink:0}
+.toggle.on{background:var(--green);box-shadow:0 0 8px var(--green-glow);border-color:transparent}
+.toggle::after{content:'';position:absolute;width:18px;height:18px;background:#fff;border-radius:50%;top:2px;left:2px;transition:var(--trans);box-shadow:0 1px 3px rgba(0,0,0,.3)}
+.toggle.on::after{transform:translateX(20px)}
+.setting-input{background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.09);border-radius:8px;color:var(--white);padding:6px 10px;font-size:13px;width:80px;text-align:right;outline:none}
+.onboarding-overlay{display:none;position:fixed;inset:0;z-index:150;background:rgba(0,0,0,.80);backdrop-filter:blur(16px);align-items:center;justify-content:center}
+.onboarding-overlay.open{display:flex}
+.onboarding-card{
+background:linear-gradient(145deg,rgba(255,255,255,0.09) 0%,rgba(255,255,255,0.04) 100%);
+border:1px solid rgba(255,255,255,0.12);border-radius:26px;padding:36px;width:490px;text-align:center;
+backdrop-filter:blur(40px) saturate(180%);-webkit-backdrop-filter:blur(40px) saturate(180%);
+box-shadow:inset 0 1.5px 0 rgba(255,255,255,0.22),0 32px 100px rgba(0,0,0,.85);
+animation:modal-in .3s ease;position:relative;overflow:hidden;}
+.onboarding-card::before{content:'';position:absolute;top:0;left:10%;width:80%;height:1px;background:linear-gradient(to right,transparent,rgba(255,255,255,0.38),transparent);pointer-events:none;}
+.onboarding-dots{display:flex;gap:8px;justify-content:center;margin-bottom:24px}
+.dot{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,0.14);transition:var(--trans)}
+.dot.active{background:var(--green);box-shadow:0 0 8px var(--green-glow);width:24px;border-radius:4px}
+.onboarding-title{font-size:28px;font-weight:800;margin-bottom:12px}
+.onboarding-body{font-size:15px;color:var(--gray);line-height:1.6;margin-bottom:24px;white-space:pre-line}
+.onboarding-status{font-size:13px;margin-bottom:16px;min-height:20px}
+.onboarding-btns{display:flex;gap:10px;justify-content:center}
+.toast-container{position:fixed;bottom:20px;right:20px;display:flex;flex-direction:column;gap:8px;z-index:200;pointer-events:none}
+.toast{
+background:linear-gradient(145deg,rgba(20,20,38,0.93) 0%,rgba(12,12,26,0.97) 100%);
+border:1px solid rgba(255,255,255,0.10);border-radius:var(--radius-sm);padding:10px 16px;font-size:13px;
+backdrop-filter:blur(24px);animation:toast-in .25s ease,toast-out .3s ease 1.6s forwards;
+box-shadow:inset 0 1px 0 rgba(255,255,255,0.10),0 4px 20px rgba(0,0,0,.5);}
+.toast.success{border-color:rgba(29,185,84,.32);color:var(--green)}
+@keyframes toast-in{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+@keyframes toast-out{from{opacity:1}to{opacity:0;transform:translateY(-8px)}}
+/* Lyrics badge - inline in track row */
+.np-track-row{display:flex;align-items:center;gap:8px;min-width:0;margin-bottom:2px;}
+.np-info{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center}
+.np-track{font-size:17px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;min-width:0;line-height:1.3}
+.np-lyrics-badge{flex-shrink:0;
+background:rgba(29,185,84,0.12);border:1px solid rgba(29,185,84,0.28);
+border-radius:99px;padding:2px 9px;font-size:10px;font-weight:600;color:var(--green);
+letter-spacing:.3px;white-space:nowrap;transition:var(--trans);
+box-shadow:inset 0 1px 0 rgba(255,255,255,0.08);cursor:pointer;}
+.np-card:hover .np-lyrics-badge{background:rgba(29,185,84,0.22);box-shadow:inset 0 1px 0 rgba(255,255,255,0.12),0 0 8px var(--green-glow)}
+/* Context menu */
+.ctx-menu{position:fixed;z-index:300;
+background:linear-gradient(145deg,rgba(16,16,28,0.96) 0%,rgba(10,10,20,0.98) 100%);
+border:1px solid rgba(255,255,255,0.11);border-radius:var(--radius-sm);padding:6px;min-width:195px;
+box-shadow:inset 0 1px 0 rgba(255,255,255,0.12),0 12px 40px rgba(0,0,0,.75);
+backdrop-filter:blur(28px);animation:modal-in .15s ease}
+.ctx-item{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:8px;font-size:13px;cursor:pointer;color:var(--gray);transition:var(--trans)}
+.ctx-item:hover{background:rgba(255,255,255,0.08);color:var(--white)}
+.ctx-item.danger:hover{background:rgba(220,38,38,.16);color:#f87171}
+.ctx-divider{height:1px;background:rgba(255,255,255,0.07);margin:4px 0}
+.pl-dur-badge{font-size:10px;color:var(--green);background:rgba(29,185,84,0.10);border:1px solid rgba(29,185,84,0.22);border-radius:99px;padding:1px 7px;white-space:nowrap;flex-shrink:0}
+.shortcuts-overlay{display:none;position:fixed;inset:0;z-index:110;background:rgba(0,0,0,.72);backdrop-filter:blur(12px);align-items:center;justify-content:center}
+.shortcuts-overlay.open{display:flex}
+.shortcuts-card{
+background:linear-gradient(145deg,rgba(255,255,255,0.08) 0%,rgba(255,255,255,0.035) 100%);
+border:1px solid rgba(255,255,255,0.11);border-radius:22px;padding:28px 32px;width:420px;
+backdrop-filter:blur(36px);box-shadow:inset 0 1.5px 0 rgba(255,255,255,0.18),0 24px 80px rgba(0,0,0,.75);
+animation:modal-in .2s ease;position:relative;overflow:hidden;}
+.shortcuts-title{font-size:18px;font-weight:700;margin-bottom:18px;display:flex;justify-content:space-between;align-items:center}
+.shortcut-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid rgba(255,255,255,0.06)}
+.shortcut-row:last-child{border:none}
+.shortcut-key{background:rgba(255,255,255,0.10);border:1px solid rgba(255,255,255,0.12);border-radius:6px;padding:2px 9px;font-size:12px;font-family:monospace;color:var(--white);box-shadow:inset 0 1px 0 rgba(255,255,255,0.12),0 1px 2px rgba(0,0,0,.25);}
+.shortcut-desc{font-size:13px;color:var(--gray)}
+.empty-state{text-align:center;color:var(--gray-dim);padding:40px;font-size:13px}
+#color-canvas{display:none}
+</style>
+</head>
+<body>
+<canvas id="color-canvas" width="64" height="64"></canvas>
+<div class="aurora-wrap">
+  <div class="orb orb-1" id="orb1"></div>
+  <div class="orb orb-2" id="orb2"></div>
+  <div class="orb orb-3" id="orb3"></div>
+</div>
+<div class="app">
+  <aside class="sidebar">
+    <div class="logo"><span class="logo-icon">🎵</span><span class="logo-text">Rotator</span></div>
+    <nav class="nav">
+      <div class="nav-btn active" onclick="App.switchTab('playlists')" id="nav-playlists"><span class="icon">≡</span> Playlists</div>
+      <div class="nav-btn" onclick="App.switchTab('queue')" id="nav-queue"><span class="icon">▤</span> Queue</div>
+      <div class="nav-btn" onclick="App.switchTab('history')" id="nav-history"><span class="icon">◷</span> History</div>
+    </nav>
+    <div class="stats-card">
+      <div class="stats-row">
+        <div class="stat-item"><div class="stat-val" id="stat-switches">0</div><div class="stat-label">switches</div></div>
+        <div class="stat-item"><div class="stat-val" id="stat-time">0:00</div><div class="stat-label">session</div></div>
+      </div>
+      <div class="stats-divider"></div>
+      <div class="now-rotating-label">NOW ROTATING</div>
+      <div class="now-rotating-name" id="stat-current">None</div>
+    </div>
+    <div class="controls-card">
+      <button class="ctrl-btn" id="ctrl-shuffle" onclick="App.toggleShuffle()" title="Shuffle">⇄</button>
+      <button class="ctrl-btn" onclick="App.prevTrack()" title="Previous">⏮</button>
+      <button class="ctrl-btn play-pause" id="ctrl-play" onclick="App.playPause()">⏸</button>
+      <button class="ctrl-btn" onclick="App.nextTrack()" title="Next">⏭</button>
+      <button class="ctrl-btn" id="ctrl-repeat" onclick="App.cycleRepeat()" title="Repeat">↻</button>
+    </div>
+    <div class="progress-wrap">
+      <div class="progress-label">Rotation progress</div>
+      <div class="progress-track"><div class="progress-fill" id="rotation-progress"></div></div>
+    </div>
+    <div class="status-text" id="status-text">Idle. Please log in.</div>
+    <div class="sidebar-spacer"></div>
+    <div class="sidebar-btns">
+      <button class="btn btn-ghost" id="auth-btn" onclick="App.authenticate()">🔐 Login &amp; Load Playlists</button>
+      <div class="btn-row">
+        <button class="btn btn-primary" id="start-btn" onclick="App.toggleRotation()">▶ Start Rotation</button>
+        <button class="btn btn-ghost btn-icon" onclick="App.manualNext()" title="Force next">⏭</button>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-ghost" onclick="App.openSettings()">⚙ Settings</button>
+        <button class="btn btn-ghost" onclick="App.refresh()">↺ Refresh</button>
+      </div>
+      <button class="btn btn-ghost" style="font-size:11px;color:var(--gray-dim)" onclick="App.showShortcuts()">⌨ Keyboard Shortcuts</button>
+    </div>
+  </aside>
+  <main class="main">
+    <div class="np-card" id="np-card" onclick="App.openLyrics()">
+      <div class="np-album" id="np-album">🎵</div>
+      <div class="np-info">
+        <div class="np-track-row">
+          <div class="np-track" id="np-track">—</div>
+          <span class="np-lyrics-badge">🎤 Lyrics</span>
+        </div>
+        <div class="np-artist" id="np-artist"></div>
+        <div class="np-album-name" id="np-album-name"></div>
+        <div class="np-progress-wrap">
+          <div class="np-progress-track"><div class="np-progress-fill" id="np-progress" style="width:0%"></div></div>
+          <div class="np-times"><span id="np-elapsed">0:00</span><span id="np-duration">0:00</span></div>
+        </div>
+      </div>
+      <div class="np-device" onclick="event.stopPropagation()">
+        <div class="device-badge" id="device-badge">Active device</div>
+        <select class="device-select" id="device-select" onchange="App.onDeviceChange()"></select>
+        <input type="range" class="volume-slider" id="volume-slider" min="0" max="100" value="50" oninput="App.onVolumeChange(this.value)">
+        <button class="btn-transfer" onclick="App.transfer()">Transfer Playback</button>
+      </div>
+    </div>
+    <div class="tab-content">
+      <div class="tab-panel active" id="tab-playlists">
+        <div class="toolbar">
+          <button class="btn btn-primary" style="padding:6px 12px;font-size:12px" onclick="App.importPlaylists()">＋ Import from Spotify</button>
+          <button class="btn btn-ghost" style="padding:6px 12px;font-size:12px" onclick="App.addManual()">＋ Add Manual</button>
+          <div style="flex:1"></div>
+          <button class="btn btn-ghost" style="padding:6px 12px;font-size:12px;color:#f87171" onclick="App.removeSelected()">✕ Remove</button>
+        </div>
+        <!-- Search bar -->
+        <div class="search-wrap">
+          <span class="search-icon">⌕</span>
+          <input class="search-input" id="pl-search" type="text" placeholder="Search playlists…"
+                 oninput="App.filterPlaylists(this.value)">
+          <button class="search-clear" id="search-clear" onclick="App.clearSearch()" style="display:none">✕</button>
+        </div>
+        <!-- Recently played quick-switch -->
+        <div id="recent-pl-wrap" style="display:none">
+          <div class="recent-pl-label">Recent</div>
+          <div class="recent-pl-list" id="recent-pl-list"></div>
+        </div>
+        <div class="scroll-list" id="playlist-list"></div>
+      </div>
+      <div class="tab-panel" id="tab-queue">
+        <div class="toolbar">
+          <span class="toolbar-label">Next up:</span>
+          <label style="font-size:12px;color:var(--gray);display:flex;align-items:center;gap:4px;cursor:pointer"><input type="radio" name="q-mode" value="duration" checked onchange="App.queueMode='duration'"> Duration</label>
+          <label style="font-size:12px;color:var(--gray);display:flex;align-items:center;gap:4px;cursor:pointer"><input type="radio" name="q-mode" value="eta" onchange="App.queueMode='eta'"> ETA</label>
+          <div style="flex:1"></div>
+          <button class="btn btn-ghost" style="padding:5px 10px;font-size:11px" onclick="App.refreshQueue()">↺ Refresh</button>
+        </div>
+        <div class="scroll-list" id="queue-list"></div>
+      </div>
+      <div class="tab-panel" id="tab-history">
+        <div class="hist-stats">
+          <div class="hist-stat"><div class="hist-stat-val" id="hs-sessions">—</div><div class="hist-stat-label">Sessions</div></div>
+          <div class="hist-stat"><div class="hist-stat-val" id="hs-switches">—</div><div class="hist-stat-label">Switches</div></div>
+          <div class="hist-stat"><div class="hist-stat-val" id="hs-time">—</div><div class="hist-stat-label">Listen time</div></div>
+        </div>
+        <div class="hist-tabs">
+          <div class="hist-tab active" onclick="App.switchHistTab('switches')" id="htab-switches">Session Log</div>
+          <div class="hist-tab" onclick="App.switchHistTab('top')" id="htab-top">Top Playlists</div>
+          <div class="hist-tab" onclick="App.switchHistTab('recent')" id="htab-recent">Recent Tracks</div>
+          <div style="flex:1"></div>
+          <button class="btn btn-ghost" style="padding:5px 10px;font-size:11px;color:#f87171" onclick="App.clearHistory()">Clear</button>
+        </div>
+        <div class="scroll-list" id="history-list"></div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- LYRICS OVERLAY -->
+<div class="lyrics-overlay" id="lyrics-overlay">
+  <div class="lyrics-bg" id="lyrics-bg"></div>
+  <div class="lyrics-bg-dim"></div>
+  <div class="lyrics-topbar">
+    <span class="lyrics-label">🎤 Lyrics</span>
+    <button class="lyrics-close" onclick="App.closeLyrics()">✕</button>
+  </div>
+  <div class="lyrics-content">
+    <div class="lyrics-left">
+      <div class="lyrics-art"><img id="lyrics-art-img" src="" alt=""></div>
+      <div class="lyrics-track-name" id="lyrics-track"></div>
+      <div class="lyrics-track-artist" id="lyrics-artist"></div>
+      <div class="lyrics-prog-bar"><div class="lyrics-prog-fill" id="lyrics-prog-fill" style="width:0%"></div></div>
+      <div class="lyrics-time"><span id="lyrics-elapsed">0:00</span><span id="lyrics-duration">0:00</span></div>
+    </div>
+    <div class="lyrics-right" id="lyrics-scroll"></div>
+  </div>
+</div>
+
+<!-- SETTINGS -->
+<div class="modal-overlay" id="settings-modal">
+  <div class="modal">
+    <div class="modal-title">⚙ Settings</div>
+    <div class="setting-row"><span class="setting-label">Switch every (minutes)</span><input type="number" class="setting-input" id="cfg-interval" value="120" min="1"></div>
+    <div class="setting-row"><span class="setting-label">Sound on switch</span><div class="toggle on" id="cfg-sound" onclick="this.classList.toggle('on')"></div></div>
+    <div class="setting-row"><span class="setting-label">Notify on playlist switch</span><div class="toggle on" id="cfg-notify" onclick="this.classList.toggle('on')"></div></div>
+    <div class="setting-row"><span class="setting-label">Auto-start rotation on launch</span><div class="toggle" id="cfg-autostart" onclick="this.classList.toggle('on')"></div></div>
+    <div class="setting-row"><span class="setting-label">Crossfade (seconds, 0=off)</span><input type="number" class="setting-input" id="cfg-crossfade" value="0" min="0" max="10"></div>
+    <div class="setting-row"><span class="setting-label">Language</span><select class="device-select" id="cfg-lang" style="width:90px"><option value="en">English</option><option value="ro">Română</option><option value="es">Español</option></select></div>
+    <div class="setting-row"><span class="setting-label">Theme</span>
+      <select class="device-select" id="cfg-theme" style="width:160px">
+        <option value="liquid-glass">✨ Liquid Glass</option>
+        <option value="frosted">🧊 Frosted Glass</option>
+        <option value="dark">⬛ Dark</option>
+        <option value="spotlight">🔦 Spotlight</option>
+        <option value="aero">🌊 Frutiger Aero</option>
+        <option value="midnight">🌙 Midnight Purple</option>
+        <option value="sunset">🌅 Sunset</option>
+      </select>
+    </div>
+    <div class="setting-row" id="plugin-row" style="flex-direction:column;align-items:flex-start;gap:6px">
+      <span class="setting-label">Load Plugin Theme (.json)</span>
+      <div style="display:flex;gap:8px;width:100%">
+        <input type="text" class="setting-input" id="plugin-path" placeholder="path/to/theme.json" style="width:100%;text-align:left;flex:1">
+        <button class="btn btn-ghost" style="padding:6px 12px;font-size:12px;flex-shrink:0" onclick="App.loadPluginTheme()">Load</button>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:16px">
+      <button class="btn btn-ghost" style="flex:1" onclick="App.closeSettings()">Cancel</button>
+      <button class="btn btn-primary" style="flex:1" onclick="App.saveSettings()">Save</button>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:8px">
+      <button class="btn btn-ghost" style="flex:1;font-size:11px" onclick="pywebview.api.open_config_folder()">📁 Config</button>
+      <button class="btn btn-ghost" style="flex:1;font-size:11px" onclick="App.exportCSV()">📊 Export CSV</button>
+      <button class="btn btn-ghost" style="flex:1;font-size:11px;color:#f87171" onclick="App.resetOnboarding()">↺ Tutorial</button>
+    </div>
+    <div style="margin-top:8px;padding-top:8px;border-top:1px solid rgba(255,255,255,0.07)">
+      <button class="btn btn-ghost" style="width:100%;font-size:11px;color:#f87171" onclick="App.clearAllCache()">
+        🗑 Clear All Cache &amp; Reset Layout
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ONBOARDING -->
+<div class="onboarding-overlay" id="onboarding">
+  <div class="onboarding-card">
+    <div class="onboarding-dots" id="ob-dots"></div>
+    <div class="onboarding-title" id="ob-title"></div>
+    <div class="onboarding-body" id="ob-body"></div>
+    <div class="onboarding-status" id="ob-status"></div>
+    <div class="onboarding-btns">
+      <button class="btn btn-ghost" id="ob-prev" onclick="App.obPrev()">← Back</button>
+      <button class="btn btn-primary" id="ob-next" onclick="App.obNext()">Next →</button>
+    </div>
+  </div>
+</div>
+<div class="toast-container" id="toasts"></div>
+
+<script>
+const App={
+  rotationRunning:false,authenticated:false,shuffleOn:false,repeatState:'off',
+  selectedPlaylist:null,queueMode:'duration',histTab:'switches',
+  dragSrcIdx:null,lastTrackId:null,devices:[],
+  currentProgress:0,currentDuration:0,currentImageUrl:null,
+  lyricsOpen:false,lyricsLines:[],lyricsPlain:[],lyricsTrackId:null,
+  lyricsActiveIdx:-1,obStep:0,
+  currentTheme: 'liquid-glass',
+
+  // ── Theme system ─────────────────────────────────────────
+  applyTheme(themeId){
+    App.currentTheme=themeId;
+    // Remove any plugin theme vars
+    const existing=document.getElementById('plugin-theme-style');
+    if(existing)existing.remove();
+    // Apply data-theme attribute
+    if(themeId==='liquid-glass')document.documentElement.removeAttribute('data-theme');
+    else document.documentElement.setAttribute('data-theme',themeId);
+    // Persist
+    localStorage.setItem('theme',themeId);
+  },
+
+  loadSavedTheme(){
+    const saved=localStorage.getItem('theme')||'liquid-glass';
+    App.applyTheme(saved);
+    const sel=document.getElementById('cfg-theme');
+    if(sel)sel.value=saved;
+  },
+
+  async loadPluginTheme(){
+    const path=document.getElementById('plugin-path').value.trim();
+    if(!path){App.toast('Enter a path to a theme JSON file','');return;}
+    try{
+      const res=await pywebview.api.load_plugin_theme(path);
+      if(!res.ok){App.toast('Failed: '+res.error,'');return;}
+      const theme=res.theme;
+      // Remove old plugin style
+      const old=document.getElementById('plugin-theme-style');if(old)old.remove();
+      // Apply vars
+      const vars=Object.entries(theme.vars||{}).map(([k,v])=>`${k}:${v};`).join('');
+      const style=document.createElement('style');
+      style.id='plugin-theme-style';
+      style.textContent=`:root{${vars}}`;
+      document.head.appendChild(style);
+      document.documentElement.removeAttribute('data-theme');
+      App.currentTheme='plugin:'+theme.name;
+      localStorage.setItem('theme','liquid-glass'); // don't persist plugin themes
+      App.toast(`Plugin theme "${theme.name}" loaded ✓`,'success');
+    }catch(e){App.toast('Error loading theme: '+e,'');}
+  },
+
+  STEPS:[
+    {title:'Welcome 👋',body:'Spotify Playlist Rotator automatically switches your playlists on a timer.'},
+    {title:'Check Config ⚙',body:'You need a free Spotify Developer app.\n\n1. Go to developer.spotify.com/dashboard\n2. Create an app\n3. Set redirect URI to:\n   http://127.0.0.1:8888/callback\n4. Copy Client ID + Secret into:\n   %APPDATA%\\SpotifyRotator\\.env',check:true},
+    {title:'Login 🔐',body:'Click the green Login button in the sidebar to connect your Spotify account.'},
+    {title:'Quick Tour 🗺',body:'▶ Start Rotation — begins the timer\n⏭ Skip — force switch now\n🎤 Click Now Playing — synced lyrics\n⇄ Shuffle — randomise order'},
+    {title:"You're all set! 🎉",body:'Your playlists will now rotate automatically. Enjoy!'},
+  ],
+
+  async init(){
+    window.__onPythonEvent=(p)=>{try{const{event,data}=JSON.parse(p);App.handlePythonEvent(event,data);}catch(e){}};
+    App.loadSavedTheme();    const auth=await pywebview.api.is_authenticated();
+    if(auth.ok){App.onAuthenticated();}else{const ob=await pywebview.api.is_onboarding_done();if(!ob.done)App.showOnboarding();}
+    App.renderPlaylists(await pywebview.api.get_playlists());
+    App.renderRecentlyPlayed();
+    setInterval(App.pollNowPlaying,1000);
+    setInterval(App.pollRotationState,600);
+    setInterval(App.updateSessionStats,1000);
+    App.loadDevices();
+
+    // Auto-start rotation if setting is enabled
+    const s=await pywebview.api.get_settings();
+    if(s.auto_start_rotation&&auth.ok){
+      setTimeout(async()=>{
+        const res=await pywebview.api.start_rotation();
+        if(res.ok){App.rotationRunning=true;App.updateStartBtn();App.setStatus('Auto-started rotation ▶');App.toast('Auto-started ▶','success');}
+      },1500);
+    }
+  },
+
+  handlePythonEvent(event,data){
+    if(event==='rotation_switch'){
+      const pl=data.playlist;
+      App.toast(`▶ ${pl.name}`,'success');App.setStatus(`▶ ${pl.name}`);
+      document.getElementById('stat-current').textContent=pl.name;
+      App.selectedPlaylist=pl.id;App.renderPlaylistsHighlight(pl.id);
+    }
+    if(event==='queue_ready'){App._queueRetries=0;App.refreshQueue();}
+    if(event==='rotation_stopped'){App.rotationRunning=false;App.updateStartBtn();App.setStatus('Stopped.');}
+  },
+
+  async authenticate(){
+    App.setStatus('Connecting to Spotify…');
+    const res=await pywebview.api.authenticate();
+    if(res.ok){
+      App.onAuthenticated();App.toast('Logged in! Loading playlists…','success');
+      const pls=await pywebview.api.fetch_spotify_playlists();
+      if(pls&&pls.length>0&&confirm(`Found ${pls.length} playlists. Import them?`)){
+        await pywebview.api.set_playlists(pls);App.renderPlaylists(pls);
+        App.toast(`Imported ${pls.length} playlists`,'success');
+      }
+    }else{App.toast('Login failed.','');App.setStatus('Login failed.');}
+  },
+
+  onAuthenticated(){
+    App.authenticated=true;
+    const btn=document.getElementById('auth-btn');
+    btn.textContent='✓ Logged in';btn.disabled=true;btn.style.opacity='.5';
+    App.setStatus('Logged in. Ready.');App.loadDevices();
+  },
+
+  switchTab(tab){
+    ['playlists','queue','history'].forEach(t=>{
+      document.getElementById(`tab-${t}`).classList.toggle('active',t===tab);
+      document.getElementById(`nav-${t}`).classList.toggle('active',t===tab);
+    });
+    if(tab==='queue'){App._queueRetries=0;App.scheduleQueueRefresh(0);}
+    if(tab==='history')App.loadHistory();
+  },
+
+  renderPlaylists(pls){
+    window.__cachedPlaylists=pls;
+    const list=document.getElementById('playlist-list');
+    list.innerHTML='';
+    if(!pls||!pls.length){list.innerHTML='<div class="empty-state">No playlists yet.<br>Import from Spotify or add manually.</div>';return;}
+    pls.forEach((pl,idx)=>{
+      const row=document.createElement('div');
+      row.className='pl-row'+(pl.id===App.selectedPlaylist?' active':'');
+      row.dataset.id=pl.id;row.dataset.idx=idx;row.draggable=true;
+      const cover=pl.image_url?`<div class="pl-cover"><img src="${pl.image_url}" loading="lazy"></div>`:`<div class="pl-cover">🎵</div>`;
+      const durBadge=pl.custom_duration_mins?`<span class="pl-dur-badge">⏱ ${pl.custom_duration_mins}m</span>`:'';
+      row.innerHTML=`<div class="pl-accent"></div><span class="pl-drag-handle">⠿</span>${cover}<div class="pl-text"><div class="pl-name">${App.esc(pl.name)}</div><div class="pl-meta">${pl.tracks_total||0} tracks</div></div>${durBadge}<span class="pl-play">▶</span>`;
+      row.addEventListener('click',()=>App.playPlaylist(pl.id,pl.name,idx));
+      row.addEventListener('contextmenu',e=>App.showContextMenu(e,pl,idx));
+      row.addEventListener('dragstart',e=>App.onDragStart(e,idx));
+      row.addEventListener('dragover',e=>App.onDragOver(e,row));
+      row.addEventListener('dragleave',()=>row.classList.remove('drag-over'));
+      row.addEventListener('drop',e=>App.onDrop(e,idx));
+      row.addEventListener('dragend',()=>list.querySelectorAll('.pl-row').forEach(r=>r.classList.remove('drag-over','dragging')));
+      list.appendChild(row);
+    });
+  },
+
+  renderPlaylistsHighlight(pid){
+    document.querySelectorAll('.pl-row').forEach(r=>r.classList.toggle('active',r.dataset.id===pid));
+    // Auto-scroll active row into view
+    const active=document.querySelector('.pl-row.active');
+    if(active)active.scrollIntoView({behavior:'smooth',block:'nearest'});
+    // Update recently played strip
+    if(pid)App.updateRecentlyPlayed(pid);
+  },
+
+  // ── Playlist search / filter ─────────────────────────────
+  filterPlaylists(query){
+    const q=query.trim().toLowerCase();
+    document.getElementById('search-clear').style.display=q?'block':'none';
+    document.getElementById('recent-pl-wrap').style.display=q?'none':'block';
+    document.querySelectorAll('.pl-row').forEach(row=>{
+      const name=row.querySelector('.pl-name')?.textContent.toLowerCase()||'';
+      row.style.display=(q===''||name.includes(q))?'':'none';
+    });
+    // Show "no results" if all hidden
+    const visible=document.querySelectorAll('.pl-row:not([style*="none"])').length;
+    const noRes=document.getElementById('pl-no-results');
+    if(!visible&&q){
+      if(!noRes){
+        const d=document.createElement('div');d.id='pl-no-results';
+        d.className='empty-state';d.style.padding='24px';
+        d.textContent=`No playlists matching "${query}"`;
+        document.getElementById('playlist-list').appendChild(d);
+      }
+    }else{
+      if(noRes)noRes.remove();
+    }
+  },
+
+  clearSearch(){
+    const inp=document.getElementById('pl-search');
+    inp.value='';App.filterPlaylists('');inp.focus();
+  },
+
+  // ── Recently played quick-switch ─────────────────────────
+  _recentPls: [],   // [{id,name,image_url}] most recent first, max 5
+
+  updateRecentlyPlayed(pid){
+    const pls=window.__cachedPlaylists||[];
+    const pl=pls.find(p=>p.id===pid);
+    if(!pl)return;
+    App._recentPls=App._recentPls.filter(p=>p.id!==pid);
+    App._recentPls.unshift({id:pl.id,name:pl.name,image_url:pl.image_url});
+    App._recentPls=App._recentPls.slice(0,5);
+    App.renderRecentlyPlayed();
+  },
+
+  renderRecentlyPlayed(){
+    const wrap=document.getElementById('recent-pl-wrap');
+    const list=document.getElementById('recent-pl-list');
+    if(!App._recentPls.length){wrap.style.display='none';return;}
+    // Don't show if search is active
+    if(document.getElementById('pl-search')?.value.trim()){return;}
+    wrap.style.display='block';
+    list.innerHTML='';
+    App._recentPls.forEach(pl=>{
+      const chip=document.createElement('div');
+      chip.className='recent-pl-chip';
+      const img=pl.image_url?`<img src="${App.esc(pl.image_url)}" alt="">`:'🎵';
+      chip.innerHTML=`${img}<span>${App.esc(pl.name)}</span>`;
+      chip.addEventListener('click',()=>{
+        const idx=(window.__cachedPlaylists||[]).findIndex(p=>p.id===pl.id);
+        if(idx>=0)App.playPlaylist(pl.id,pl.name,idx);
+      });
+      list.appendChild(chip);
+    });
+  },
+
+  async playPlaylist(id,name,idx){
+    App.selectedPlaylist=id;App.renderPlaylistsHighlight(id);
+    document.getElementById('stat-current').textContent=name;
+    document.getElementById('queue-list').innerHTML='<div class="empty-state" style="padding:16px">⏳ Loading queue…</div>';
+    const res=await pywebview.api.start_playlist(id);
+    if(res.ok){
+      App.toast(`▶ ${name}`,'success');App.setStatus(`▶ ${name}`);
+      setTimeout(App.pollNowPlaying,600);
+      setTimeout(App.refreshQueue,2500);
+    }
+  },
+
+  async importPlaylists(){
+    App.setStatus('Fetching playlists…');
+    const pls=await pywebview.api.fetch_spotify_playlists();
+    if(pls&&pls.length>0&&confirm(`Found ${pls.length} playlists. Replace current list?`)){
+      await pywebview.api.set_playlists(pls);App.renderPlaylists(pls);App.toast(`Imported ${pls.length}`,'success');
+    }
+    App.setStatus('Logged in. Ready.');
+  },
+
+  async addManual(){
+    const val=prompt('Paste playlist ID or Spotify URL:');if(!val)return;
+    const res=await pywebview.api.add_playlist(val.trim());
+    if(res.ok){App.toast(`Added: ${res.playlist.name}`,'success');App.renderPlaylists(await pywebview.api.get_playlists());}
+    else App.toast(`Error: ${res.error}`,'');
+  },
+
+  async removeSelected(){
+    const a=document.querySelector('.pl-row.active');if(!a){App.toast('Select a playlist first','');return;}
+    if(!confirm(`Remove "${a.querySelector('.pl-name').textContent}"?`))return;
+    await pywebview.api.remove_playlist(parseInt(a.dataset.idx));
+    App.renderPlaylists(await pywebview.api.get_playlists());App.toast('Removed','');
+  },
+
+  // ── Right-click context menu ─────────────────────────────
+  showContextMenu(e,pl,idx){
+    e.preventDefault();
+    App.closeContextMenu();
+    const menu=document.createElement('div');
+    menu.className='ctx-menu';menu.id='ctx-menu';
+    menu.innerHTML=`
+      <div class="ctx-item" id="ctx-play">▶ Play now</div>
+      <div class="ctx-item" id="ctx-dur">⏱ Set custom duration</div>
+      <div class="ctx-item" id="ctx-clr-dur" style="${pl.custom_duration_mins?'':'display:none'}">✕ Remove custom duration</div>
+      <div class="ctx-divider"></div>
+      <div class="ctx-item danger" id="ctx-remove">🗑 Remove from rotation</div>
+    `;
+    document.body.appendChild(menu);
+    // Position near cursor, keep on screen
+    const mx=Math.min(e.clientX,window.innerWidth-200);
+    const my=Math.min(e.clientY,window.innerHeight-160);
+    menu.style.left=mx+'px';menu.style.top=my+'px';
+    menu.querySelector('#ctx-play').addEventListener('click',()=>{App.playPlaylist(pl.id,pl.name,idx);App.closeContextMenu();});
+    menu.querySelector('#ctx-dur').addEventListener('click',()=>{App.closeContextMenu();App.setCustomDuration(pl,idx);});
+    menu.querySelector('#ctx-clr-dur').addEventListener('click',async()=>{
+      App.closeContextMenu();
+      const pls=await pywebview.api.get_playlists();
+      delete pls[idx].custom_duration_mins;
+      await pywebview.api.set_playlists(pls);
+      App.renderPlaylists(pls);App.toast('Duration reset to global','');
+    });
+    menu.querySelector('#ctx-remove').addEventListener('click',async()=>{
+      App.closeContextMenu();
+      if(!confirm(`Remove "${pl.name}"?`))return;
+      await pywebview.api.remove_playlist(idx);
+      App.renderPlaylists(await pywebview.api.get_playlists());App.toast('Removed','');
+    });
+    setTimeout(()=>document.addEventListener('click',App.closeContextMenu,{once:true}),10);
+  },
+  closeContextMenu(){const m=document.getElementById('ctx-menu');if(m)m.remove();},
+
+  async setCustomDuration(pl,idx){
+    const val=prompt(`Custom duration for "${pl.name}" (minutes):\nLeave blank to use global setting.`,pl.custom_duration_mins||'');
+    if(val===null)return;
+    const pls=await pywebview.api.get_playlists();
+    if(val.trim()===''){delete pls[idx].custom_duration_mins;}
+    else{const mins=parseInt(val);if(isNaN(mins)||mins<1){App.toast('Invalid duration','');return;}pls[idx].custom_duration_mins=mins;}
+    await pywebview.api.set_playlists(pls);App.renderPlaylists(pls);
+    App.toast(val.trim()===''?'Using global duration':`Duration set to ${parseInt(val)}m`,'success');
+  },
+
+  // ── Keyboard shortcut overlay ────────────────────────────
+  showShortcuts(){
+    let el=document.getElementById('shortcuts-overlay');
+    if(!el){
+      el=document.createElement('div');el.className='shortcuts-overlay';el.id='shortcuts-overlay';
+      el.innerHTML=`<div class="shortcuts-card">
+        <div class="shortcuts-title"><span>⌨ Keyboard Shortcuts</span><button class="lyrics-close" onclick="App.hideShortcuts()">✕</button></div>
+        ${[
+          ['Space',          'Play / Pause'],
+          ['→',              'Next track'],
+          ['←',              'Previous track'],
+          ['Ctrl + N',       'Force next playlist'],
+          ['L',              'Open / close lyrics'],
+          ['?',              'This shortcut list'],
+          ['Escape',         'Close overlays'],
+        ].map(([k,d])=>`<div class="shortcut-row"><span class="shortcut-desc">${d}</span><span class="shortcut-key">${k}</span></div>`).join('')}
+      </div>`;
+      document.body.appendChild(el);
+    }
+    el.classList.add('open');
+  },
+  hideShortcuts(){const el=document.getElementById('shortcuts-overlay');if(el)el.classList.remove('open');},
+
+  onDragStart(e,idx){App.dragSrcIdx=idx;e.currentTarget.classList.add('dragging');e.dataTransfer.effectAllowed='move';},
+  onDragOver(e,row){e.preventDefault();e.dataTransfer.dropEffect='move';document.querySelectorAll('.pl-row').forEach(r=>r.classList.remove('drag-over'));row.classList.add('drag-over');},
+  async onDrop(e,targetIdx){
+    e.preventDefault();if(App.dragSrcIdx===null||App.dragSrcIdx===targetIdx)return;
+    const pls=await pywebview.api.get_playlists();
+    const moved=pls.splice(App.dragSrcIdx,1)[0];pls.splice(targetIdx,0,moved);
+    await pywebview.api.reorder_playlists(pls.map(p=>p.id));
+    App.renderPlaylists(pls);App.toast('Reordered ✓','success');App.dragSrcIdx=null;
+  },
+
+  _queueFetching: false,
+  _queueTimer: null,
+  _queueRetries: 0,
+  MAX_QUEUE_RETRIES: 2,
+
+  scheduleQueueRefresh(delayMs=0){
+    clearTimeout(App._queueTimer);
+    App._queueTimer=setTimeout(App.refreshQueue, delayMs);
+  },
+
+  async refreshQueue(){
+    if(App._queueFetching)return;
+    App._queueFetching=true;
+    try{
+      const items=await pywebview.api.get_queue();
+      const list=document.getElementById('queue-list');
+
+      // If empty but we haven't retried yet, wait and try again
+      // — Spotify needs time to rebuild context after a skip
+      if((!items||!items.length) && App._queueRetries < App.MAX_QUEUE_RETRIES){
+        App._queueRetries++;
+        list.innerHTML=`<div class="empty-state" style="padding:16px;font-size:12px">⏳ Refreshing queue… (${App._queueRetries}/${App.MAX_QUEUE_RETRIES})</div>`;
+        App._queueFetching=false;
+        App.scheduleQueueRefresh(2500);
+        return;
+      }
+
+      App._queueRetries=0;
+      list.innerHTML='';
+      if(!items||!items.length){
+        list.innerHTML='<div class="empty-state">Queue is empty</div>';
+        return;
+      }
+      let cumMs=Math.max(0,App.currentDuration-App.currentProgress);
+      items.forEach(item=>{
+        const suffix=App.queueMode==='eta'?App.fmtMs(Math.max(0,cumMs)):App.fmtMs(item.duration_ms);
+        cumMs+=item.duration_ms;
+        const row=document.createElement('div');row.className='q-row';
+        const cover=item.image_url?`<div class="q-cover"><img src="${item.image_url}" loading="lazy"></div>`:`<div class="q-cover">🎵</div>`;
+        row.innerHTML=`${cover}<div class="q-text"><div class="q-name">${App.esc(item.name)}</div><div class="q-artist">${App.esc(item.artist)}</div></div><span class="q-dur">${suffix}</span>`;
+        row.addEventListener('click',()=>{
+          pywebview.api.play_track(item.uri);
+          App._queueRetries=0;
+          App.scheduleQueueRefresh(2500);
+        });
+        list.appendChild(row);
+      });
+    }finally{
+      App._queueFetching=false;
+    }
+  },
+
+  async loadHistory(){
+    const data=await pywebview.api.get_history();
+    document.getElementById('hs-sessions').textContent=data.stats.total_sessions;
+    document.getElementById('hs-switches').textContent=data.stats.total_switches;
+    document.getElementById('hs-time').textContent=data.stats.listening_time;
+    App.renderHistTab(data);
+  },
+
+  async switchHistTab(tab){
+    App.histTab=tab;
+    ['switches','top','recent'].forEach(t=>document.getElementById(`htab-${t}`).classList.toggle('active',t===tab));
+    if(tab==='recent'){document.getElementById('history-list').innerHTML='<div class="empty-state">Loading…</div>';App.renderRecentTracks(await pywebview.api.get_recently_played());}
+    else App.renderHistTab(await pywebview.api.get_history());
+  },
+
+  renderHistTab(data){
+    const list=document.getElementById('history-list');list.innerHTML='';
+    if(App.histTab==='switches'){
+      if(!data.switches.length){list.innerHTML='<div class="empty-state">No history yet.</div>';return;}
+      data.switches.forEach(sw=>{const row=document.createElement('div');row.className='hist-row';row.innerHTML=`<div class="hist-row-name">${App.esc(sw.name)}</div><div class="hist-row-meta">${sw.dt}</div>`;list.appendChild(row);});
+    }else if(App.histTab==='top'){
+      if(!data.top_playlists.length){list.innerHTML='<div class="empty-state">No data yet</div>';return;}
+      const rc=['gold','silver','bronze'];
+      data.top_playlists.forEach((item,i)=>{const row=document.createElement('div');row.className='hist-top-row';row.innerHTML=`<span class="hist-rank ${rc[i]||'other'}">#${i+1}</span><span class="hist-top-name">${App.esc(item.name)}</span><span class="hist-top-count">${item.count}×</span>`;list.appendChild(row);});
+    }
+  },
+
+  renderRecentTracks(items){
+    const list=document.getElementById('history-list');list.innerHTML='';
+    if(!items.length){list.innerHTML='<div class="empty-state">No recent tracks</div>';return;}
+    items.forEach(item=>{
+      const row=document.createElement('div');row.className='hist-row';row.style.cursor='pointer';
+      row.innerHTML=`<div class="hist-row-name">${App.esc(item.name)}</div><div class="hist-row-meta">${App.esc(item.artist)} · ${item.played_at}</div>`;
+      row.addEventListener('click',()=>pywebview.api.play_track(item.uri));
+      list.appendChild(row);
+    });
+  },
+
+  async clearHistory(){if(!confirm('Clear all history?'))return;await pywebview.api.clear_history();App.loadHistory();App.toast('History cleared','');},
+
+  async pollNowPlaying(){
+    if(!App.authenticated)return;
+    const np=await pywebview.api.get_now_playing();
+    if(!np.playing){
+      ['np-track','np-artist','np-album-name'].forEach((id,i)=>document.getElementById(id).textContent=i===0?'—':'');
+      document.getElementById('np-progress').style.width='0%';
+      document.getElementById('np-elapsed').textContent='0:00';
+      document.getElementById('np-duration').textContent='0:00';
+      document.getElementById('ctrl-play').textContent='▶';
+      document.getElementById('np-album').innerHTML='🎵';
+      document.getElementById('np-album').classList.remove('playing');
+      return;
+    }
+    document.getElementById('np-track').textContent=np.track;
+    document.getElementById('np-artist').textContent=np.artist;
+    document.getElementById('np-album-name').textContent=np.album;
+    document.getElementById('ctrl-play').textContent=np.is_playing?'⏸':'▶';
+    const pct=np.duration_ms>0?(np.progress_ms/np.duration_ms*100):0;
+    document.getElementById('np-progress').style.width=pct+'%';
+    document.getElementById('np-elapsed').textContent=App.fmtMs(np.progress_ms);
+    document.getElementById('np-duration').textContent=App.fmtMs(np.duration_ms);
+    App.currentProgress=np.progress_ms;App.currentDuration=np.duration_ms;
+    if(App.lyricsOpen){
+      document.getElementById('lyrics-prog-fill').style.width=pct+'%';
+      document.getElementById('lyrics-elapsed').textContent=App.fmtMs(np.progress_ms);
+      document.getElementById('lyrics-duration').textContent=App.fmtMs(np.duration_ms);
+      App.updateLyricsHighlight(np.progress_ms/1000);
+    }
+    if(np.image_url&&np.image_url!==App.currentImageUrl){
+      App.currentImageUrl=np.image_url;
+      const albumEl=document.getElementById('np-album');
+      albumEl.innerHTML=`<img src="${np.image_url}" crossorigin="anonymous" id="np-album-img">`;
+      albumEl.classList.toggle('playing',np.is_playing);
+      const img=albumEl.querySelector('img');
+      img.onload=()=>App.extractColor(img);
+      if(App.lyricsOpen){
+        document.getElementById('lyrics-art-img').src=np.image_url;
+        document.getElementById('lyrics-bg').style.backgroundImage=`url(${np.image_url})`;
+      }
+    }
+    if(np.track_id&&np.track_id!==App.lyricsTrackId){
+      App.lyricsTrackId=np.track_id;
+      App.fetchLyrics(np.track,np.artist,np.album,np.duration_ms);
+      // Track changed — refresh queue and re-highlight active playlist
+      App._queueRetries=0;
+      App.scheduleQueueRefresh(1200);
+      if(App.selectedPlaylist)App.renderPlaylistsHighlight(App.selectedPlaylist);
+    }
+    document.getElementById('ctrl-shuffle').classList.toggle('active',np.shuffle_state);
+    App.shuffleOn=np.shuffle_state;App.repeatState=np.repeat_state;
+    const rb=document.getElementById('ctrl-repeat');
+    rb.textContent={off:'↻',context:'↻',track:'🔂'}[np.repeat_state]||'↻';
+    rb.classList.toggle('active',np.repeat_state!=='off');
+  },
+
+  extractColor(img){
+    try{
+      const c=document.getElementById('color-canvas'),ctx=c.getContext('2d');
+      ctx.drawImage(img,0,0,64,64);
+      const d=ctx.getImageData(0,0,64,64).data;
+      let best={r:29,g:185,b:84,score:0};
+      for(let i=0;i<d.length;i+=32){
+        const r=d[i],g=d[i+1],b=d[i+2];
+        const mx=Math.max(r,g,b),mn=Math.min(r,g,b);
+        const sat=mx===0?0:(mx-mn)/mx,br=mx/255;
+        const score=sat*br*(0.5+br*0.5);
+        if(score>best.score)best={r,g,b,score};
+      }
+      const{r,g,b}=best;
+      const o1=`rgb(${r},${g},${b})`;
+      const o2=`rgb(${Math.min(255,b+40)},${Math.min(255,r*.4|0)},${Math.min(255,g+60)})`;
+      const o3=`rgb(${Math.min(255,g*.5|0)},${Math.min(255,b+30)},${Math.min(255,r+50)})`;
+      const glow=`rgba(${r},${g},${b},.35)`;
+      document.documentElement.style.setProperty('--accent-glow',glow);
+      document.getElementById('orb1').style.background=`radial-gradient(circle,${o1} 0%,transparent 70%)`;
+      document.getElementById('orb2').style.background=`radial-gradient(circle,${o2} 0%,transparent 70%)`;
+      document.getElementById('orb3').style.background=`radial-gradient(circle,${o3} 0%,transparent 70%)`;
+    }catch(e){}
+  },
+
+  async fetchLyrics(track,artist,album,duration_ms){
+    App.lyricsLines=[];App.lyricsPlain=[];
+    try{
+      const res=await pywebview.api.get_lyrics(track,artist,album,duration_ms);
+      App.lyricsLines=res.synced||[];App.lyricsPlain=res.plain||[];
+      if(App.lyricsOpen)App.renderLyricsContent();
+    }catch(e){}
+  },
+
+  openLyrics(){
+    App.lyricsOpen=true;
+    document.getElementById('lyrics-overlay').classList.add('open');
+    const img=document.getElementById('np-album-img');
+    const url=img?img.src:'';
+    document.getElementById('lyrics-art-img').src=url;
+    document.getElementById('lyrics-bg').style.backgroundImage=url?`url(${url})`:'';
+    document.getElementById('lyrics-track').textContent=document.getElementById('np-track').textContent;
+    document.getElementById('lyrics-artist').textContent=document.getElementById('np-artist').textContent;
+    const pct=App.currentDuration>0?(App.currentProgress/App.currentDuration*100):0;
+    document.getElementById('lyrics-prog-fill').style.width=pct+'%';
+    document.getElementById('lyrics-elapsed').textContent=App.fmtMs(App.currentProgress);
+    document.getElementById('lyrics-duration').textContent=App.fmtMs(App.currentDuration);
+    App.renderLyricsContent();
+  },
+
+  closeLyrics(){App.lyricsOpen=false;document.getElementById('lyrics-overlay').classList.remove('open');},
+
+  renderLyricsContent(){
+    const scroll=document.getElementById('lyrics-scroll');scroll.innerHTML='';
+    if(!App.lyricsLines.length&&!App.lyricsPlain.length){
+      scroll.innerHTML='<div class="lyrics-none">🎵 No lyrics found for this track.<br><span style="font-size:11px">lrclib.net doesn\'t have it yet.</span></div>';return;
+    }
+    const pad=document.createElement('div');pad.style.minHeight='38vh';scroll.appendChild(pad);
+    const lines=App.lyricsLines.length?App.lyricsLines:App.lyricsPlain.map(t=>({time_s:null,text:t}));
+    lines.forEach((line,idx)=>{
+      const el=document.createElement('div');
+      el.className='lyric-line'+(line.text?'':' empty-line');
+      el.textContent=line.text||'';el.dataset.idx=idx;
+      scroll.appendChild(el);
+    });
+    const pad2=document.createElement('div');pad2.style.minHeight='38vh';scroll.appendChild(pad2);
+    App.updateLyricsHighlight(App.currentProgress/1000);
+  },
+
+  updateLyricsHighlight(sec){
+    if(!App.lyricsOpen||!App.lyricsLines.length)return;
+    let ai=0;
+    for(let i=0;i<App.lyricsLines.length;i++){if(App.lyricsLines[i].time_s<=sec)ai=i;else break;}
+    if(ai===App.lyricsActiveIdx)return;
+    App.lyricsActiveIdx=ai;
+    const scroll=document.getElementById('lyrics-scroll');
+    const els=scroll.querySelectorAll('.lyric-line');
+    els.forEach((el,i)=>{el.classList.toggle('active',i===ai);el.classList.toggle('past',i<ai);});
+    const activeEl=els[ai];if(activeEl)activeEl.scrollIntoView({behavior:'smooth',block:'center'});
+  },
+
+  async pollRotationState(){
+    const s=await pywebview.api.get_rotation_state();
+    App.rotationRunning=s.running;
+    document.getElementById('rotation-progress').style.width=(s.progress*100)+'%';
+    App.updateStartBtn();
+  },
+
+  updateStartBtn(){
+    const btn=document.getElementById('start-btn');
+    btn.textContent=App.rotationRunning?'■ Stop Rotation':'▶ Start Rotation';
+    btn.style.background=App.rotationRunning?'rgba(220,38,38,.9)':'';
+  },
+
+  async toggleRotation(){
+    if(!App.authenticated){await App.authenticate();return;}
+    if(App.rotationRunning){await pywebview.api.stop_rotation();App.rotationRunning=false;App.setStatus('Stopped.');App.toast('Rotation stopped','');}
+    else{const res=await pywebview.api.start_rotation();if(res.ok){App.rotationRunning=true;App.setStatus('Rotation started…');App.toast('Rotation started ▶','success');}else App.toast(res.error||'Could not start','');}
+    App.updateStartBtn();
+  },
+
+  async manualNext(){
+    const res=await pywebview.api.manual_next();
+    if(res.ok&&res.playlist){
+      App.toast(`Switched → ${res.playlist.name}`,'success');
+      document.getElementById('stat-current').textContent=res.playlist.name;
+      App.selectedPlaylist=res.playlist.id;App.renderPlaylistsHighlight(res.playlist.id);
+      document.getElementById('queue-list').innerHTML='<div class="empty-state" style="padding:16px">⏳ Loading queue…</div>';
+      setTimeout(App.pollNowPlaying,800);setTimeout(App.refreshQueue,2500);
+    }
+  },
+
+  async playPause(){const res=await pywebview.api.play_pause();document.getElementById('ctrl-play').textContent=res.is_playing?'⏸':'▶';},
+  async prevTrack(){
+    await pywebview.api.previous_track();
+    setTimeout(App.pollNowPlaying,600);
+    // Give Spotify 2s to settle queue after track change
+    App.scheduleQueueRefresh(2000);
+  },
+  async nextTrack(){
+    await pywebview.api.next_track();
+    setTimeout(App.pollNowPlaying,600);
+    App.scheduleQueueRefresh(2000);
+  },
+  async toggleShuffle(){App.shuffleOn=!App.shuffleOn;await pywebview.api.set_shuffle(App.shuffleOn);document.getElementById('ctrl-shuffle').classList.toggle('active',App.shuffleOn);},
+  async cycleRepeat(){
+    const st=['off','context','track'];App.repeatState=st[(st.indexOf(App.repeatState)+1)%3];
+    await pywebview.api.set_repeat(App.repeatState);
+    const btn=document.getElementById('ctrl-repeat');
+    btn.textContent={off:'↻',context:'↻',track:'🔂'}[App.repeatState];
+    btn.classList.toggle('active',App.repeatState!=='off');
+  },
+
+  async loadDevices(){
+    if(!App.authenticated)return;
+    const devs=await pywebview.api.get_devices();App.devices=devs;
+    const sel=document.getElementById('device-select');sel.innerHTML='';
+    devs.forEach(d=>{const o=document.createElement('option');o.value=d.id;o.textContent=`${d.name} (${d.type})`;if(d.is_active)o.selected=true;sel.appendChild(o);});
+    const active=devs.find(d=>d.is_active);
+    const badge=document.getElementById('device-badge');
+    if(active){badge.textContent='● Active device';badge.classList.add('active');if(typeof active.volume_percent==='number')document.getElementById('volume-slider').value=active.volume_percent;}
+    else{badge.textContent='No active device';badge.classList.remove('active');}
+  },
+  onDeviceChange(){const sel=document.getElementById('device-select');const dev=App.devices.find(d=>d.id===sel.value);if(dev&&typeof dev.volume_percent==='number')document.getElementById('volume-slider').value=dev.volume_percent;},
+  _vt:null,onVolumeChange(val){clearTimeout(App._vt);App._vt=setTimeout(async()=>{await pywebview.api.set_volume(parseInt(val),document.getElementById('device-select').value);},150);},
+  async transfer(){await pywebview.api.transfer_playback(document.getElementById('device-select').value);App.toast('Transferred ✓','success');setTimeout(App.loadDevices,1000);},
+
+  async openSettings(){
+    const s=await pywebview.api.get_settings();
+    document.getElementById('cfg-interval').value=Math.round((s.interval_seconds||7200)/60);
+    document.getElementById('cfg-sound').classList.toggle('on',s.sound_enabled!==false);
+    document.getElementById('cfg-notify').classList.toggle('on',s.notify_on_switch!==false);
+    document.getElementById('cfg-autostart').classList.toggle('on',s.auto_start_rotation===true);
+    document.getElementById('cfg-crossfade').value=s.crossfade_seconds||0;
+    document.getElementById('cfg-lang').value=s.language||'en';
+    const themeEl=document.getElementById('cfg-theme');
+    if(themeEl)themeEl.value=localStorage.getItem('theme')||'liquid-glass';
+    document.getElementById('settings-modal').classList.add('open');
+  },
+  closeSettings(){document.getElementById('settings-modal').classList.remove('open');},
+  async saveSettings(){
+    const themeEl=document.getElementById('cfg-theme');
+    if(themeEl)App.applyTheme(themeEl.value);
+    await pywebview.api.save_settings_data({
+      interval_seconds:    parseInt(document.getElementById('cfg-interval').value)*60,
+      sound_enabled:       document.getElementById('cfg-sound').classList.contains('on'),
+      notify_on_switch:    document.getElementById('cfg-notify').classList.contains('on'),
+      auto_start_rotation: document.getElementById('cfg-autostart').classList.contains('on'),
+      crossfade_seconds:   parseInt(document.getElementById('cfg-crossfade').value)||0,
+      language:            document.getElementById('cfg-lang').value,
+    });
+    App.closeSettings();App.toast('Settings saved ✓','success');
+  },
+  async exportCSV(){
+    App.closeSettings();
+    const res=await pywebview.api.export_history_csv();
+    if(res.ok)App.toast('CSV exported and opened ✓','success');
+    else App.toast('Export failed: '+res.error,'');
+  },
+
+  async clearAllCache(){
+    if(!confirm('This will:\n\n• Reset the theme to Liquid Glass\n• Clear the Spotify auth cache (you\'ll need to log in again)\n• Reset the window state\n\nHistory and playlists are NOT deleted.\n\nContinue?'))return;
+    App.closeSettings();
+    // 1. Clear localStorage (theme, any other UI state)
+    localStorage.clear();
+    // 2. Clear Spotify auth cache on disk
+    const res=await pywebview.api.clear_spotify_cache();
+    if(!res.ok)App.toast('Cache clear partially failed: '+res.error,'');
+    // 3. Reset theme visually
+    App.applyTheme('liquid-glass');
+    // 4. Reset plugin theme style tag
+    const pt=document.getElementById('plugin-theme-style');if(pt)pt.remove();
+    document.documentElement.removeAttribute('data-theme');
+    App.toast('Cache cleared — please restart the app to re-login','success');
+  },
+  async resetOnboarding(){await pywebview.api.save_settings_data({_onboarding_done:false});App.closeSettings();App.obStep=0;App.showOnboarding();},
+
+  async updateSessionStats(){const info=await pywebview.api.get_session_info();document.getElementById('stat-switches').textContent=info.session_switches;document.getElementById('stat-time').textContent=info.elapsed_str;},
+
+  showOnboarding(){document.getElementById('onboarding').classList.add('open');App.renderObStep();},
+  renderObStep(){
+    const step=App.STEPS[App.obStep],total=App.STEPS.length;
+    const dotsEl=document.getElementById('ob-dots');dotsEl.innerHTML='';
+    for(let i=0;i<total;i++){const d=document.createElement('div');d.className='dot'+(i===App.obStep?' active':'');dotsEl.appendChild(d);}
+    document.getElementById('ob-title').textContent=step.title;
+    document.getElementById('ob-body').textContent=step.body;
+    document.getElementById('ob-status').textContent=step.check?'✅ Config found!':'';
+    document.getElementById('ob-status').style.color='var(--green)';
+    document.getElementById('ob-prev').style.visibility=App.obStep===0?'hidden':'visible';
+    document.getElementById('ob-next').textContent=App.obStep===total-1?'Finish ✓':'Next →';
+  },
+  obPrev(){if(App.obStep>0){App.obStep--;App.renderObStep();}},
+  async obNext(){if(App.obStep<App.STEPS.length-1){App.obStep++;App.renderObStep();}else{await pywebview.api.complete_onboarding();document.getElementById('onboarding').classList.remove('open');}},
+
+  async refresh(){App.pollNowPlaying();App.loadDevices();App.toast('Refreshed ✓','success');},
+
+  initKeyboard(){
+    document.addEventListener('keydown',e=>{
+      if(e.target.tagName==='INPUT'||e.target.tagName==='SELECT')return;
+      if(e.code==='Space'){e.preventDefault();App.playPause();}
+      if(e.code==='ArrowRight'){e.preventDefault();App.nextTrack();}
+      if(e.code==='ArrowLeft'){e.preventDefault();App.prevTrack();}
+      if(e.key==='n'&&e.ctrlKey){e.preventDefault();App.manualNext();}
+      if(e.key==='l'||e.key==='L')App.lyricsOpen?App.closeLyrics():App.openLyrics();
+      if(e.key==='?')App.showShortcuts();
+      if(e.key==='Escape'){App.closeLyrics();App.closeSettings();App.hideShortcuts();App.closeContextMenu();}
+    });
+  },
+
+  setStatus(t){document.getElementById('status-text').textContent=t;},
+  toast(msg,type){const el=document.createElement('div');el.className='toast'+(type?` ${type}`:'');el.textContent=msg;document.getElementById('toasts').appendChild(el);setTimeout(()=>el.remove(),2000);},
+  fmtMs(ms){if(!ms||ms<0)ms=0;const s=Math.floor(ms/1000),m=Math.floor(s/60);return `${m}:${String(s%60).padStart(2,'0')}`;},
+  esc(s){if(!s)return '';return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');},
+};
+window.addEventListener('pywebviewready',()=>{App.init();App.initKeyboard();});
+</script>
+</body>
+</html>
